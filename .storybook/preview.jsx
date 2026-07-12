@@ -1,15 +1,19 @@
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import '@fontsource/pretendard/300.css';
+import '@fontsource/pretendard/400.css';
+import '@fontsource/pretendard/500.css';
+import '@fontsource/pretendard/600.css';
+import '@fontsource/pretendard/700.css';
 
 import { defaultTheme } from '../src/styles/themes';
 
-// Google Fonts 로드 (Material Symbols + 기본 폰트)
+// Google Fonts 로드 (Material Symbols + StretchedHeadline/StyledParagraph 등이 참조하는 Outfit)
+// 기본 테마 폰트인 Pretendard는 Google Fonts에 없어 @fontsource/pretendard로 별도 로드한다.
 const googleFonts = [
-  // Material Symbols
   'Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200',
   'Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200',
   'Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200',
-  // Default Theme Font
   'Outfit:wght@300;400;500;600;700;800;900',
 ];
 

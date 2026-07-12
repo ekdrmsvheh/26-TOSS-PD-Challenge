@@ -1,5 +1,5 @@
 {
-  "name": "vibe-design-starter-kit",
+  "name": "meet-fit",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,6 +16,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource-variable/material-symbols-outlined": "^5.2.30",
+    "@fontsource/pretendard": "^5.2.5",
     "@mui/icons-material": "^7.3.5",
     "@mui/lab": "7.0.1-beta.20",
     "@mui/material": "^7.3.5",

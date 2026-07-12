@@ -13,23 +13,29 @@ MUI 커스텀 테마 설정 규칙
 - **Pretendard Variable** 버전을 웹폰트로 사용
 
 ### Headline
-- **영어**: Google Font의 **Outfit**
-- **한글**: Pretendard의 가장 높은 weight
+- **영어/한글 공통**: Pretendard, 얇은 weight(300)가 브랜드 시그니처 (Outfit 사용 안 함)
 
 ## Color
 
-### Primary Color
-```jsx
-primary: {
-  main: '#0000FF'
-}
-```
+### Primitive → Semantic 구조 (CRITICAL)
 
-### Secondary Color
+hex 값은 `primitives` 객체(`src/styles/themes/default.js` 최상단)에서만 관리하고,
+`palette`(시멘틱 토큰)는 그 값을 참조만 한다. 컴포넌트에서 새 색상이 필요하면
+1) `primitives`에 이름 있는 스케일로 추가 → 2) `palette`에서 시멘틱 슬롯으로 매핑 →
+3) 컴포넌트는 `'primary.main'`, `'background.stone'`처럼 시멘틱 경로만 참조한다.
+컴포넌트 코드에 hex를 직접 쓰지 않는다.
+
 ```jsx
-secondary: {
-  main: blueGrey[900]  // blueGrey의 가장 어두운색
-}
+const primitives = {
+  ink: { 0: '#FFFFFF', 900: '#000000' /* ... */ },
+  maroon: { 500: '#A13D33' /* ... */ },
+};
+
+const palette = {
+  primary: { main: primitives.ink[900] },      // 검정 (CTA 버튼)
+  secondary: { main: primitives.ink[500] },    // 웜 그레이 (muted)
+  error: { main: primitives.maroon[500] },     // 필수(*) 표시, 에러 상태
+};
 ```
 
 ## Elevation
@@ -51,11 +57,16 @@ shadows: [
 
 ## Border Radius
 
-인라인으로 직접 지정하지 않는 이상 모든 컴포넌트의 borderRadius는 **0**
+단일 값이 아니라 컴포넌트 종류별로 다르게 적용한다.
+
+- 기본(`shape.borderRadius`): **12px** — 드롭다운/인풋 등 소형 컨테이너
+- Card: **16px**
+- Button(contained): **9999px** (완전 pill 형태)
+- Chip: **4px**
 
 ```jsx
 shape: {
-  borderRadius: 0
+  borderRadius: 12
 }
 ```
 
@@ -66,19 +77,20 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
-    primary: { main: '#0000FF' },
-    secondary: { main: '#263238' },  // blueGrey[900]
+    primary: { main: '#000000' },
+    secondary: { main: '#777169' },
+    error: { main: '#a13d33' },
   },
   typography: {
     fontFamily: 'Pretendard Variable, sans-serif',
     h1: {
-      fontFamily: 'Outfit, Pretendard Variable, sans-serif',
-      fontWeight: 900,
+      fontFamily: 'Pretendard Variable, sans-serif',
+      fontWeight: 300,
     },
     // ...
   },
   shape: {
-    borderRadius: 0,
+    borderRadius: 12,
   },
 });
 

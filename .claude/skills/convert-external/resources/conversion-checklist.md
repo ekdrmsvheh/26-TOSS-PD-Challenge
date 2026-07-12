@@ -75,8 +75,11 @@ overflow-hidden → overflow: 'hidden'
 
 | 감지 패턴 | 변환 규칙 |
 |-----------|----------|
-| `#0000FF` 또는 유사 blue | → `'primary.main'` |
-| `#263238` (blueGrey 900) | → `'secondary.main'` |
+| `#000000`, `#0a0a0a`, `#1a1a1a` (검정 계열) | → `'primary.main'` |
+| `#777169`, `#4e4e4e`, `#9a938a` (웜 그레이) | → `'secondary.main'` |
+| `#a13d33` (필수 표시/에러) | → `'error.main'` |
+| `#e5e5e5` | → `'divider'` |
+| `#f5f2ef` | → 웜 톤 배경, `theme.palette.background` 확장 또는 Props로 외부화 |
 | 기타 하드코딩 #hex | → 가장 가까운 `theme.palette` 토큰, 없으면 Props로 외부화 |
 | 하드코딩 px 폰트 크기 | → `theme.typography` variant 사용 |
 | 하드코딩 px 간격 | → `theme.spacing` (MUI spacing 단위) |

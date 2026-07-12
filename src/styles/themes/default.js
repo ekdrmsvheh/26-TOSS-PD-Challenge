@@ -4,41 +4,66 @@
  * 프로젝트의 기본 디자인 토큰을 정의하는 표준 테마입니다.
  * 피그마의 Design Tokens / Variables와 동일한 역할입니다.
  *
- * ## 핵심 철학
- * - **Sharp Corners**: borderRadius 0 (날카로운 모서리)
- * - **Dimmed Shadow**: offset 없이 blur만 사용하는 은은한 그림자
- * - **Pure White**: 깔끔한 흰색 배경
- * - **Brand Blue**: Primary 색상 #0000FF
+ * ## 핵심 철학 (ElevenLabs 스타일 기반, 밋핏 디자인 반영)
+ * - **Warm Neutral**: 웜 그레이 텍스트 + 흰색/스톤 배경
+ * - **Pill Buttons**: contained 버튼은 완전 라운드(9999px), 카드는 16px
+ * - **Ink Black**: Primary 색상 #000000 (검정)
+ * - **Thin Headings**: 헤딩은 Pretendard, 얇은 굵기(300)가 브랜드 시그니처
  */
 
 import { createTheme } from '@mui/material/styles';
-import { blueGrey, grey } from '@mui/material/colors';
+import { grey } from '@mui/material/colors';
 
 // ============================================================
-// 1. Color Tokens (색상 토큰)
+// 0. Primitive Tokens (프리미티브 토큰)
+// ============================================================
+// 이름 있는 컬러 스케일. 시멘틱 토큰(palette)은 여기서 값을 가져다 쓰기만 하고,
+// 실제 hex 값은 이 객체 안에서만 관리한다 (Figma Variables의 Primitive Collection과 동일한 역할).
+const primitives = {
+  // Ink — 밋핏 디자인의 웜 블랙/그레이 스케일
+  ink: {
+    0: '#FFFFFF',
+    50: '#F5F2EF',   // stone, 웜 배경
+    100: '#E5E5E5',  // border
+    300: '#9A938A',  // muted, disabled 텍스트
+    500: '#777169',  // secondary 텍스트
+    700: '#4E4E4E',  // secondary 텍스트(진한 톤)
+    800: '#2B2B2B',
+    900: '#000000',  // ink black, CTA 버튼
+  },
+  // Maroon — 필수 표시 / 에러 상태 전용 액센트
+  maroon: {
+    300: '#C0584D',
+    500: '#A13D33',
+    700: '#7A2E26',
+  },
+};
+
+// ============================================================
+// 1. Color Tokens (색상 토큰, Semantic)
 // ============================================================
 const palette = {
   mode: 'light',
   // 브랜드 색상
   primary: {
-    light: '#6666FF',
-    main: '#0000FF',
-    dark: '#0000B2',
-    contrastText: '#FFFFFF',
+    light: primitives.ink[800],
+    main: primitives.ink[900],
+    dark: primitives.ink[900],
+    contrastText: primitives.ink[0],
   },
   secondary: {
-    light: blueGrey[700],
-    main: blueGrey[900],
-    dark: '#1a252b',
-    contrastText: '#FFFFFF',
+    light: primitives.ink[300],
+    main: primitives.ink[500],
+    dark: primitives.ink[700],
+    contrastText: primitives.ink[0],
   },
 
   // 상태 색상 (Feedback)
   error: {
-    light: '#ef5350',
-    main: '#d32f2f',
-    dark: '#c62828',
-    contrastText: '#FFFFFF',
+    light: primitives.maroon[300],
+    main: primitives.maroon[500],
+    dark: primitives.maroon[700],
+    contrastText: primitives.ink[0],
   },
   warning: {
     light: '#ff9800',
@@ -61,19 +86,20 @@ const palette = {
 
   // 텍스트 색상
   text: {
-    primary: 'rgba(0, 0, 0, 0.87)',
-    secondary: 'rgba(0, 0, 0, 0.6)',
-    disabled: 'rgba(0, 0, 0, 0.38)',
+    primary: primitives.ink[900],
+    secondary: primitives.ink[700],
+    disabled: primitives.ink[300],
   },
 
   // 배경 색상
   background: {
-    default: '#FFFFFF',
-    paper: '#FFFFFF',
+    default: primitives.ink[0],
+    paper: primitives.ink[0],
+    stone: primitives.ink[50], // 웜 톤 배경 (뱃지, 강조 영역 등)
   },
 
   // 구분선
-  divider: 'rgba(0, 0, 0, 0.12)',
+  divider: primitives.ink[100],
 
   // 액션 상태
   action: {
@@ -123,8 +149,8 @@ const typography = {
     'sans-serif',
   ].join(','),
 
-  // 헤딩 폰트 패밀리
-  headingFontFamily: '"Outfit", "Pretendard Variable", Pretendard, sans-serif',
+  // 헤딩 폰트 패밀리 (얇은 굵기의 Pretendard가 브랜드 시그니처)
+  headingFontFamily: '"Pretendard Variable", Pretendard, sans-serif',
 
   // 폰트 크기 기준
   fontSize: 14,
@@ -136,60 +162,60 @@ const typography = {
   fontWeightMedium: 500,
   fontWeightBold: 700,
 
-  // 헤딩 스타일
+  // 헤딩 스타일 (ElevenLabs 타입 스케일 — display-hero/section/card 등 role 토큰 반영)
   h1: {
-    fontFamily: '"Outfit", "Pretendard Variable", Pretendard, sans-serif',
-    fontWeight: 900,
-    fontSize: '2.5rem',      // 40px
-    lineHeight: 1.2,
-    letterSpacing: '-0.02em',
+    fontFamily: '"Pretendard Variable", Pretendard, sans-serif',
+    fontWeight: 300,
+    fontSize: '3rem',        // 48px — display-hero
+    lineHeight: 1.08,
+    letterSpacing: '-0.96px',
   },
   h2: {
-    fontFamily: '"Outfit", "Pretendard Variable", Pretendard, sans-serif',
-    fontWeight: 900,
-    fontSize: '2rem',        // 32px
-    lineHeight: 1.2,
-    letterSpacing: '-0.02em',
+    fontFamily: '"Pretendard Variable", Pretendard, sans-serif',
+    fontWeight: 300,
+    fontSize: '2.25rem',     // 36px — section
+    lineHeight: 1.17,
+    letterSpacing: '0',
   },
   h3: {
-    fontFamily: '"Outfit", "Pretendard Variable", Pretendard, sans-serif',
-    fontWeight: 800,
-    fontSize: '1.75rem',     // 28px
-    lineHeight: 1.3,
-    letterSpacing: '-0.01em',
+    fontFamily: '"Pretendard Variable", Pretendard, sans-serif',
+    fontWeight: 300,
+    fontSize: '2rem',        // 32px — card
+    lineHeight: 1.13,
+    letterSpacing: '0',
   },
   h4: {
-    fontFamily: '"Outfit", "Pretendard Variable", Pretendard, sans-serif',
-    fontWeight: 700,
+    fontFamily: '"Pretendard Variable", Pretendard, sans-serif',
+    fontWeight: 500,
     fontSize: '1.5rem',      // 24px
     lineHeight: 1.3,
-    letterSpacing: '-0.01em',
+    letterSpacing: '0',
   },
   h5: {
-    fontFamily: '"Outfit", "Pretendard Variable", Pretendard, sans-serif',
-    fontWeight: 700,
-    fontSize: '1.25rem',     // 20px
-    lineHeight: 1.4,
+    fontFamily: '"Pretendard Variable", Pretendard, sans-serif',
+    fontWeight: 400,
+    fontSize: '1.25rem',     // 20px — body-lg
+    lineHeight: 1.35,
     letterSpacing: '0',
   },
   h6: {
-    fontFamily: '"Outfit", "Pretendard Variable", Pretendard, sans-serif',
-    fontWeight: 600,
-    fontSize: '1.125rem',    // 18px
+    fontFamily: '"Pretendard Variable", Pretendard, sans-serif',
+    fontWeight: 700,
+    fontSize: '1.125rem',    // 18px — 섹션 타이틀(예: "미팅 정보", "참석자")
     lineHeight: 1.4,
     letterSpacing: '0',
   },
 
   // 본문 스타일
   body1: {
-    fontSize: '1rem',        // 16px
-    lineHeight: 1.6,
-    letterSpacing: '0',
+    fontSize: '1rem',        // 16px — body-std
+    lineHeight: 1.5,
+    letterSpacing: '0.16px',
   },
   body2: {
-    fontSize: '0.875rem',    // 14px
-    lineHeight: 1.6,
-    letterSpacing: '0',
+    fontSize: '0.875rem',    // 14px — caption 역할과 공유
+    lineHeight: 1.43,
+    letterSpacing: '0.14px',
   },
 
   // 부제목
@@ -208,22 +234,22 @@ const typography = {
 
   // 기타
   button: {
-    fontSize: '0.875rem',    // 14px
-    fontWeight: 600,
-    lineHeight: 1.75,
-    letterSpacing: '0.02em',
+    fontSize: '0.9375rem',   // 15px — nav/button
+    fontWeight: 500,
+    lineHeight: 1.47,
+    letterSpacing: '0.15px',
     textTransform: 'none',   // 대문자 변환 비활성화
   },
   caption: {
-    fontSize: '0.75rem',     // 12px
-    lineHeight: 1.5,
-    letterSpacing: '0.02em',
+    fontSize: '0.875rem',    // 14px — caption
+    lineHeight: 1.43,
+    letterSpacing: '0.14px',
   },
   overline: {
-    fontSize: '0.75rem',     // 12px
-    fontWeight: 600,
-    lineHeight: 2,
-    letterSpacing: '0.08em',
+    fontSize: '0.875rem',    // 14px — button-upper
+    fontWeight: 700,
+    lineHeight: 1.1,
+    letterSpacing: '0.7px',
     textTransform: 'uppercase',
   },
 };
@@ -237,7 +263,7 @@ const spacing = 8; // 기본 단위: 8px
 // 4. Shape Token (모양 토큰)
 // ============================================================
 const shape = {
-  borderRadius: 0, // Sharp corners (0px)
+  borderRadius: 12, // 기본값 — 드롭다운/인풋 등 소형 컨테이너 (--radius-md)
 };
 
 // ============================================================
@@ -335,15 +361,18 @@ const components = {
   MuiButton: {
     styleOverrides: {
       root: {
-        borderRadius: 0,
+        borderRadius: shape.borderRadius,
         textTransform: 'none',
+      },
+      contained: {
+        borderRadius: 9999, // pill 형태 (primary CTA)
       },
     },
   },
   MuiCard: {
     styleOverrides: {
       root: {
-        borderRadius: 0,
+        borderRadius: 16, // --radius-card
       },
     },
   },
@@ -380,7 +409,7 @@ defaultTheme.dashboard = {
   style: 'default',
   iconStyle: 'outlined',
   iconWeight: 400,
-  cardBorderRadius: 0,
+  cardBorderRadius: 16,
   cardColors: [
     'linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 100%)',
     'linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 100%)',
@@ -408,13 +437,13 @@ defaultTheme.dashboard = {
   subBorder: '1px solid rgba(0, 0, 0, 0.06)',
   subShadow: '0 0 0 rgba(0, 0, 0, 0)',
   subBackdropFilter: 'blur(0px)',
-  subBorderRadius: 0,
-  dividerColor: 'rgba(0, 0, 0, 0.12)',
+  subBorderRadius: 12,
+  dividerColor: '#e5e5e5',
   progressHeight: 6,
   progressTrackColor: 'rgba(0, 0, 0, 0.08)',
   progressBarColor: palette.primary.main,
   progressGradient: false,
-  progressBorderRadius: 0,
+  progressBorderRadius: 9999,
   background: '#FFFFFF',
   atmosphere: 'linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 100%)',
   atmosphereOpacity: 0,
@@ -432,6 +461,7 @@ export default defaultTheme;
 
 // 개별 토큰 내보내기 (문서화용)
 export {
+  primitives,
   palette,
   typography,
   spacing,
