@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>모두의 한 시간 — C안 전체 플로우 v1.4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../소스/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <a class="brand" href="#"><span class="logo"><i></i><i></i><i></i></span>모두의 한 시간</a>
+      <div class="rail-copy">
+        <span>C안 · 전체 플로우</span>
+        <h1>조건을 조정하며<br>미팅 시간을 확정하기</h1>
+        <p>조건 탐색부터 참석자 응답, 최종 확정까지 이어지는 주최자 플로우입니다.</p>
+      </div>
+      <nav class="flow-nav" id="flowNav" aria-label="미팅 조율 단계"></nav>
+      <button class="rail-reset" id="resetButton" type="button">처음부터 보기</button>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <strong>AI 페이지 생성 방향 결정</strong>
+          <span>다음 주 안에 1시간 미팅 잡기</span>
+        </div>
+        <div class="topbar-avatars" aria-label="참여자 6명">
+          <i>지</i><i>민</i><i>현</i><i>서</i><i>수</i><i>도</i>
+        </div>
+      </header>
+      <div id="app"></div>
+    </main>
+  </div>
+
+  <div class="modal hidden" id="modal" aria-hidden="true">
+    <button class="backdrop" id="modalBackdrop" type="button" aria-label="닫기"></button>
+    <div class="dialog" id="dialog"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="../소스/app.js"></script>
+</body>
+</html>
