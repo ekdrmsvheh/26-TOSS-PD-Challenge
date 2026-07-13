@@ -8,15 +8,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { useTheme } from '@mui/material/styles';
-import {
-  blue,
-  blueGrey,
-  grey,
-  red,
-  orange,
-  green,
-  lightBlue,
-} from '@mui/material/colors';
+import { primitives } from '../../styles/themes';
 import {
   DocumentTitle,
   PageContainer,
@@ -37,7 +29,7 @@ const PaletteScale = ({ name, colorObj, description }) => (
     <Typography variant="h6" sx={ { fontWeight: 600, mb: 0.5 } }>{ name }</Typography>
     <Typography variant="body2" color="text.secondary" sx={ { mb: 2 } }>{ description }</Typography>
     <Box sx={ { display: 'flex', flexWrap: 'wrap', gap: 1 } }>
-      { [50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((shade) => (
+      { Object.keys(colorObj).map(Number).sort((a, b) => a - b).map((shade) => (
         <Box
           key={ shade }
           sx={ {
@@ -350,53 +342,60 @@ export const Palette = {
       <DocumentTitle
         title="Color Palette"
         status="Available"
-        note="MUI default color palette"
+        note="Toss design system primitives (oh-my-design)"
         brandName="Design System"
         systemName="Starter Kit"
         version="1.0"
       />
       <PageContainer>
         <Typography variant="h4" sx={ { fontWeight: 700, mb: 1 } }>
-          Color Palette (원시 색상)
+          Color Palette (프리미티브)
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={ { mb: 4 } }>
-          MUI에서 제공하는 기본 색상 팔레트입니다. 이 색상들을 조합하여 테마를 구성합니다.
+          <code>src/styles/themes/default.js</code>의 <code>primitives</code> 객체를 그대로 시각화한 것입니다.
+          시멘틱 토큰(<code>theme.palette</code>)은 이 값들을 참조만 하고, 컴포넌트는 이 hex를 직접 쓰지 않습니다 —
+          아래 &quot;2. Semantic Tokens&quot;에서 시멘틱 경로(<code>primary.main</code> 등)를 확인하세요.
         </Typography>
 
         <Divider sx={ { mb: 4 } } />
 
-        <PaletteScale name="Blue" colorObj={ blue } description="Primary 색상의 기반" />
-        <PaletteScale name="Blue Grey" colorObj={ blueGrey } description="Secondary 색상의 기반" />
-        <PaletteScale name="Grey" colorObj={ grey } description="텍스트, 배경, 보더" />
-        <PaletteScale name="Red" colorObj={ red } description="Error 상태" />
-        <PaletteScale name="Orange" colorObj={ orange } description="Warning 상태" />
-        <PaletteScale name="Green" colorObj={ green } description="Success 상태" />
-        <PaletteScale name="Light Blue" colorObj={ lightBlue } description="Info 상태" />
+        <PaletteScale name="Grey" colorObj={ primitives.grey } description="텍스트, 배경, 보더 — secondary 색상의 기반" />
+        <PaletteScale name="Blue" colorObj={ primitives.blue } description="Primary 색상의 기반 — 인터랙션 전용, 장식 금지" />
+        <PaletteScale name="Red" colorObj={ primitives.red } description="Error 상태의 기반" />
+        <PaletteScale name="Orange" colorObj={ primitives.orange } description="Warning 상태의 기반" />
+        <PaletteScale name="Yellow" colorObj={ primitives.yellow } description="시멘틱 미연결 — 강조/하이라이트 용도로 필요 시 연결" />
+        <PaletteScale name="Green" colorObj={ primitives.green } description="Success 상태의 기반" />
+        <PaletteScale name="Teal" colorObj={ primitives.teal } description="Info 상태의 기반 — Blue는 primary 전용이라 정보성 톤은 Teal로 분리" />
+        <PaletteScale name="Purple" colorObj={ primitives.purple } description="시멘틱 미연결 — 프로모션/뱃지 용도로 필요 시 연결" />
 
-        <SectionTitle title="명도 가이드" />
+        <Box sx={ { mb: 6, p: 2, backgroundColor: 'grey.100', borderRadius: 1 } }>
+          <PaletteScale name="Dim" colorObj={ primitives.dim } description="스크림/오버레이 전용 반투명 스케일 (hex+opacity를 rgba로 환산) — 회색 배경 위에서 대비 확인" />
+        </Box>
+
+        <SectionTitle title="명도 가이드" description="Toss Grey 10단계 기준" />
 
         <TableContainer>
           <Table size="small">
             <TableBody>
               <TableRow>
                 <TableCell sx={ { fontWeight: 600, width: '20%' } }>50-100</TableCell>
-                <TableCell>매우 밝음 - 배경색</TableCell>
+                <TableCell>가장 밝음 - 배경, 서브 배경</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell sx={ { fontWeight: 600 } }>200-300</TableCell>
-                <TableCell>밝음 - hover, 보더</TableCell>
+                <TableCell>밝음 - 보더, 구분선</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell sx={ { fontWeight: 600 } }>400-500</TableCell>
-                <TableCell>기본 - main 색상</TableCell>
+                <TableCell>중간 - placeholder, 캡션 텍스트</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell sx={ { fontWeight: 600 } }>600-700</TableCell>
-                <TableCell>어두움 - active, dark</TableCell>
+                <TableCell>어두움 - 본문, 강조 텍스트</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell sx={ { fontWeight: 600 } }>800-900</TableCell>
-                <TableCell>매우 어두움 - 텍스트</TableCell>
+                <TableCell>가장 어두움 - 라벨, 헤딩 텍스트</TableCell>
               </TableRow>
             </TableBody>
           </Table>

@@ -5,7 +5,7 @@
  * 각 테마는 MUI createTheme 규격을 따릅니다.
  */
 
-import defaultTheme from './default.js';
+import defaultTheme, { primitives } from './default.js';
 
 /** 사용 가능한 테마 목록 */
 export const themes = {
@@ -38,5 +38,5 @@ export const getTheme = (themeName) => {
  */
 export const getThemeNames = () => Object.keys(themes);
 
-export { defaultTheme };
+export { defaultTheme, primitives };
 export default themes;

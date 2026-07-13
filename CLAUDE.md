@@ -1,5 +1,10 @@
 # Project Rules
 
+## 언어
+
+- 항상 한국어로 응답한다. 코드 주석, 커밋 메시지도 별도 요청이 없으면 한국어로 작성한다.
+- Bash 등 도구 실행 전 설명, permission 프롬프트에 뜨는 명령어 설명 문구도 한국어로 작성한다.
+
 ## Product Context
 
 - 프로덕트(밋핏) 배경/정책/UX 기준 → `docs/product/PROJECT_CONTEXT.md`부터 읽는다 (나머지 확정본 파일 위치를 안내함)

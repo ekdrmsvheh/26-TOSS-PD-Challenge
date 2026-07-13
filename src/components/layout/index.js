@@ -29,6 +29,9 @@ export {
 // PageContainer - 반응형 페이지 컨테이너
 export { PageContainer } from './PageContainer.jsx';
 
+// CardPageLayout - 카드 기반 화면 공통 콘텐츠 셸
+export { CardPageLayout } from './CardPageLayout.jsx';
+
 // AppShell - 반응형 앱 셸
 export { AppShell } from './AppShell.jsx';
 export { useAppShell } from './useAppShell.js';

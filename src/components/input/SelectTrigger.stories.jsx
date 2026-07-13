@@ -12,6 +12,7 @@ export default {
     placeholder: { control: 'text', description: '값이 없을 때 표시할 안내 텍스트' },
     isRequired: { control: 'boolean', description: '필수 여부 (라벨 옆 * 표시)' },
     isDisabled: { control: 'boolean', description: '비활성화 여부' },
+    size: { control: 'select', options: ['medium', 'small'], description: '크기 변형' },
     onClick: { action: 'clicked', description: '버튼 클릭 핸들러' },
   },
   parameters: {
@@ -52,6 +53,18 @@ export const Empty = {
     label: '미팅 일정 범위',
     placeholder: '기간을 선택하세요',
     isRequired: true,
+  },
+};
+
+export const Small = {
+  render: (args) => (
+    <Box sx={{ maxWidth: 200 }}>
+      <SelectTrigger {...args} />
+    </Box>
+  ),
+  args: {
+    value: '1시간',
+    size: 'small',
   },
 };
 

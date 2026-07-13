@@ -75,11 +75,13 @@ overflow-hidden → overflow: 'hidden'
 
 | 감지 패턴 | 변환 규칙 |
 |-----------|----------|
-| `#000000`, `#0a0a0a`, `#1a1a1a` (검정 계열) | → `'primary.main'` |
-| `#777169`, `#4e4e4e`, `#9a938a` (웜 그레이) | → `'secondary.main'` |
-| `#a13d33` (필수 표시/에러) | → `'error.main'` |
-| `#e5e5e5` | → `'divider'` |
-| `#f5f2ef` | → 웜 톤 배경, `theme.palette.background` 확장 또는 Props로 외부화 |
+| `#3182f6`, `#2272eb` (Toss Blue 계열) | → `'primary.main'` / `'primary.dark'` |
+| `#4e5968`, `#333d4b`, `#8b95a1` (Toss Grey, 강조/보조 텍스트) | → `'secondary.main'` / `'secondary.dark'` / `'secondary.light'` |
+| `#f04452`, `#dc2626` (에러/파괴적 액션) | → `'error.main'` / `'error.dark'` |
+| `#e5e8eb` | → `'divider'` |
+| `#f2f4f6` | → `'background.stone'` (서브 배경) 또는 `'grey.100'` |
+| `#191f28`, `#6b7684`, `#b0b8c1` (텍스트 그레이 스케일) | → `'text.primary'` / `'text.secondary'` / `'text.disabled'` |
+| `#0064ff` (Toss Brand Blue, 로고 전용) | → UI 색상 아님. `primary.main`(`#3182f6`)과 혼동 금지, 로고/마케팅 맥락이 아니면 이 값 자체를 쓰지 않는다 |
 | 기타 하드코딩 #hex | → 가장 가까운 `theme.palette` 토큰, 없으면 Props로 외부화 |
 | 하드코딩 px 폰트 크기 | → `theme.typography` variant 사용 |
 | 하드코딩 px 간격 | → `theme.spacing` (MUI spacing 단위) |

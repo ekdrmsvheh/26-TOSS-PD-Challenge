@@ -5,3 +5,6 @@ export { SelectTrigger } from './SelectTrigger.jsx';
 export { AttendeeRow } from './AttendeeRow.jsx';
 export { DateRangePicker } from './DateRangePicker.jsx';
 export { AttendeePicker } from './AttendeePicker.jsx';
+export { AttendeeSelectDialog } from './AttendeeSelectDialog.jsx';
+export { PresetPopover } from './PresetPopover.jsx';
+export { TimeSelectPopover } from './TimeSelectPopover.jsx';

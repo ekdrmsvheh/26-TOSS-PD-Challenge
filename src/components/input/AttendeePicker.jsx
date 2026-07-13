@@ -88,7 +88,7 @@ export function AttendeePicker({
             direction="row"
             alignItems="center"
             spacing="8px"
-            sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px', px: '12px', py: '8px', mb: '10px' }}
+            sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', px: '12px', py: '8px', mb: '10px' }}
           >
             <SearchIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
             <InputBase

@@ -71,6 +71,8 @@ function buildMonthGrid(viewDate) {
  *    첫 클릭보다 이르면 자동으로 시작/종료가 바뀐다)
  * 2. 종료일을 선택하지 않고 "완료"를 누르면 시작일과 동일한 하루짜리 범위로 확정된다
  * 3. 프리셋 클릭 시 즉시 해당 범위로 값이 채워진다 (완료를 눌러야 확정)
+ * 4. getRange가 {start: null, end: null}을 반환하는 프리셋("직접 입력" 등)은 선택 상태만 비우고
+ *    캘린더가 보고 있는 달은 바꾸지 않는다 — 완료 버튼은 start가 채워지기 전까지 비활성 상태다
  *
  * Props:
  * @param {boolean} open - 팝업 표시 여부 [Required]
@@ -130,7 +132,8 @@ export function DateRangePicker({
   const handlePresetClick = (preset) => {
     const range = preset.getRange();
     setDraft(range);
-    setViewDate(range.start);
+    // "직접 입력"처럼 start가 없는 프리셋은 선택 상태만 비우고, 캘린더가 보고 있는 달은 그대로 둔다.
+    if (range.start) setViewDate(range.start);
   };
 
   const handleConfirm = () => {

@@ -14,8 +14,8 @@ import Box from '@mui/material/Box';
  *
  * Props:
  * @param {string} variant - 카드 스타일 ('outlined' | 'elevation' | 'ghost' | 'filled') [Optional, 기본값: 'outlined']
- * @param {string} padding - 내부 패딩 ('none' | 'sm' | 'md' | 'lg') [Optional, 기본값: 'md']
- * @param {string} radius - 모서리 둥글기 ('none' | 'sm' | 'md' | 'lg') [Optional, 기본값: 'md']
+ * @param {string} padding - 내부 패딩 ('none' | 'sm' | 'md' | 'lg' | 'card') [Optional, 기본값: 'md']
+ * @param {string} radius - 모서리 둥글기 ('none' | 'sm' | 'md' | 'lg' | 'card') [Optional, 기본값: 'md']
  * @param {boolean} isInteractive - 호버 효과 활성화 [Optional, 기본값: false]
  * @param {boolean} isSelected - 선택 상태 표시 [Optional, 기본값: false]
  * @param {function} onClick - 클릭 핸들러 [Optional]
@@ -46,6 +46,7 @@ const CardContainer = forwardRef(function CardContainer({
     sm: 2,
     md: 3,
     lg: 4,
+    card: '20px', // CardPageLayout 2컬럼 레이아웃의 카드(흰 박스) 전용 패딩
   };
 
   /**
@@ -56,6 +57,7 @@ const CardContainer = forwardRef(function CardContainer({
     sm: 1,
     md: 2,
     lg: 3,
+    card: '20px', // CardPageLayout 2컬럼 레이아웃의 카드(흰 박스) 전용 반경
   };
 
   /**
@@ -72,7 +74,9 @@ const CardContainer = forwardRef(function CardContainer({
         return {
           ...base,
           backgroundColor: 'background.paper',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05)',
+          border: 'none',
+          // Figma "card shadow" 토큰과 동일 (offset 0/2, blur 5, rgba(0,0,0,0.03))
+          boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.03)',
         };
 
       case 'ghost':

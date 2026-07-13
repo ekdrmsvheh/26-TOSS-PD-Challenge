@@ -76,7 +76,7 @@ export function SearchBar({
       display: 'flex',
       alignItems: 'center',
       height: currentSize.height,
-      borderRadius: 2,
+      borderRadius: 1, // Toss 인풋 반경(8px) — theme.shape.borderRadius와 통일
       transition: 'all 0.2s ease',
     };
 

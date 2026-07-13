@@ -15,6 +15,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
  * 1. value가 있으면 검정 텍스트로, 없으면 placeholder를 muted 톤으로 표시
  * 2. 클릭 시 onClick 콜백만 실행 — 실제 팝업 렌더링은 부모가 담당
  * 3. isRequired가 true면 라벨 옆에 error 색상 asterisk 표시
+ * 4. size="small"이면 높이 32px 고정 + 패딩/폰트가 한 단계 작아진다 (라운딩은 8px로 고정, 조건 요약 카드처럼 좁은 폼에 사용)
  *
  * Props:
  * @param {string} label - 필드 라벨 [Optional]
@@ -23,6 +24,8 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
  * @param {node} icon - 좌측 아이콘 [Optional]
  * @param {boolean} isRequired - 필수 여부 (라벨 옆 * 표시) [Optional, 기본값: false]
  * @param {boolean} isDisabled - 비활성화 여부 [Optional, 기본값: false]
+ * @param {boolean} hideChevron - 우측 드롭다운 화살표 숨김 여부 [Optional, 기본값: false]
+ * @param {'medium'|'small'} size - 크기 변형 [Optional, 기본값: 'medium']
  * @param {function} onClick - 버튼 클릭 핸들러 [Optional]
  * @param {object} sx - 추가 스타일 [Optional]
  *
@@ -41,10 +44,13 @@ export const SelectTrigger = forwardRef(function SelectTrigger({
   icon,
   isRequired = false,
   isDisabled = false,
+  hideChevron = false,
+  size = 'medium',
   onClick,
   sx,
   ...props
 }, ref) {
+  const isSmall = size === 'small';
   return (
     <Box sx={{ position: 'relative', ...sx }}>
       {label && (
@@ -74,17 +80,19 @@ export const SelectTrigger = forwardRef(function SelectTrigger({
         disabled={isDisabled}
         sx={{
           width: '100%',
+          height: isSmall ? '32px' : 'auto',
+          boxSizing: 'border-box',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
+          gap: isSmall ? '4px' : '10px',
           fontFamily: 'inherit',
-          fontSize: 14,
-          fontWeight: 600,
-          padding: '13px 15px',
+          fontSize: isSmall ? 14 : 14,
+          fontWeight: isSmall ? 500 : 600,
+          padding: isSmall ? '6px 12px' : '13px 15px',
           bgcolor: 'background.paper',
           border: '1px solid',
           borderColor: 'divider',
-          borderRadius: '12px', // --radius-md
+          borderRadius: '8px', // Toss 인풋 반경 — 크기와 무관하게 통일
           textAlign: 'left',
           color: value ? 'text.primary' : 'text.disabled',
           cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -105,7 +113,9 @@ export const SelectTrigger = forwardRef(function SelectTrigger({
         >
           {value || placeholder}
         </Box>
-        <KeyboardArrowDownIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
+        {!hideChevron && (
+          <KeyboardArrowDownIcon sx={{ fontSize: isSmall ? 14 : 16, color: 'text.secondary', flexShrink: 0 }} />
+        )}
       </Box>
     </Box>
   );

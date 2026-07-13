@@ -7,3 +7,4 @@
 
 // 공통 훅
 export { useSnackbar } from './useSnackbar';
+export { usePersistentState } from './usePersistentState';
