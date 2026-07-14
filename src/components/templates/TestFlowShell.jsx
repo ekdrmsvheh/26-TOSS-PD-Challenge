@@ -35,8 +35,8 @@ const flowGroups = [
   {
     section: '주최자',
     items: [
-      { id: 'response-status', role: 'host', step: 4, number: 4, label: '응답 현황 확인' },
-      { id: 'confirm', role: 'host', step: 5, number: 5, label: '미팅 확정' },
+      { id: 'response-status', role: 'host', step: 4, number: 5, label: '응답 현황 확인' },
+      { id: 'confirm', role: 'host', step: 5, number: 6, label: '미팅 확정' },
     ],
   },
 ];
@@ -153,7 +153,16 @@ const TestFlowShell = forwardRef(function TestFlowShell(
   },
   ref
 ) {
-  const currentNumber = role === 'participant' ? 4 : currentStep;
+  // 활성 네비 항목의 뱃지 번호 — step과 number가 어긋날 수 있어 데이터에서 직접 찾는다
+  const activeItem = flowGroups
+    .flatMap((group) => group.items)
+    .find((item) => item.role === role && (role === 'participant' || item.step === currentStep));
+  const currentNumber = activeItem?.number ?? currentStep;
+
+  // maxNumber를 넘는 항목(미완성 단계)은 네비에서 숨기고, 남는 항목이 없는 그룹은 통째로 생략한다
+  const visibleGroups = flowGroups
+    .map((group) => ({ ...group, items: group.items.filter((item) => item.number <= maxNumber) }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <Box ref={ref} sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.stone', ...sx }} {...props}>
@@ -237,7 +246,7 @@ const TestFlowShell = forwardRef(function TestFlowShell(
               플로우
             </Typography>
             <Stack spacing="8px">
-              {flowGroups.map((group, groupIndex) => (
+              {visibleGroups.map((group, groupIndex) => (
                 <Box key={`${group.section}-${groupIndex}`}>
                   {groupIndex > 0 && (
                     <Box sx={{ borderTop: '1px solid', borderColor: 'divider', mb: '10px' }} />
@@ -249,15 +258,13 @@ const TestFlowShell = forwardRef(function TestFlowShell(
                     {group.items.map((item) => {
                       const selected = item.role === role && item.number === currentNumber;
                       const badgeState = selected ? 'selected' : item.number < currentNumber ? 'done' : 'default';
-                      // maxNumber를 넘는 항목은 메뉴에 보이되 클릭 비활성화(미완성 단계 잠금)
-                      const locked = item.number > maxNumber;
                       return (
                         <NavigationItem
                           key={item.id}
-                          item={locked ? { ...item, disabled: true } : item}
+                          item={item}
                           selected={selected}
                           badgeState={badgeState}
-                          onClick={locked ? undefined : () => onSelectItem?.({ role: item.role, step: item.step })}
+                          onClick={() => onSelectItem?.({ role: item.role, step: item.step })}
                         />
                       );
                     })}

@@ -28,10 +28,12 @@ const IS_PUBLIC = FORCE_PUBLIC || import.meta.env.DEV;
 // 완성되면 LOCK_PUBLIC_FLOW를 false로 바꾸면 원복된다.
 const LOCK_PUBLIC_FLOW = true;
 const IS_FLOW_LOCKED = LOCK_PUBLIC_FLOW && !import.meta.env.DEV;
+// 네비 뱃지 번호 기준으로 여기까지만 노출한다. 초과 항목(5·6번 = 응답 현황 확인·미팅 확정)은
+// 네비에서 숨겨진다. 현재는 4번(참석자 "일정 확인 후 응답")까지 공개.
 const MAX_UNLOCKED_NUMBER = 4;
-// 참석자 "일정 확인 후 응답"은 플로우 번호 4번이다. 이 번호까지 열렸으면 잠금 상태에서도
-// 참석자 역할과 3번 화면의 다음 단계 진입점을 허용한다.
-const IS_PARTICIPANT_UNLOCKED = MAX_UNLOCKED_NUMBER >= 4;
+const IS_PARTICIPANT_UNLOCKED = MAX_UNLOCKED_NUMBER >= 4; // 4번 = 참석자 "일정 확인 후 응답"
+// 4번은 참석자 화면이라 호스트 플로우 자체는 3단계까지만 열린다 (4·5단계 = 응답 현황/미팅 확정 잠금)
+const MAX_UNLOCKED_HOST_STEP = 3;
 
 function AvailableSchedulePage({ onGoHome }) {
   const [scenario, setScenario] = usePersistentState('meetfit:scenario', 'A');
@@ -63,7 +65,7 @@ function AvailableSchedulePage({ onGoHome }) {
 
   // 배포 잠금 시엔 이전 localStorage 값이 4단계 이상이거나 참석자여도 강제로 1~3번(주최자)로 되돌린다
   const effectiveRole = IS_FLOW_LOCKED && !IS_PARTICIPANT_UNLOCKED ? 'host' : role;
-  const effectiveStep = IS_FLOW_LOCKED ? Math.min(step, MAX_UNLOCKED_NUMBER) : step;
+  const effectiveStep = IS_FLOW_LOCKED ? Math.min(step, MAX_UNLOCKED_HOST_STEP) : step;
 
   return (
     <TestFlowShell
@@ -89,10 +91,8 @@ function AvailableSchedulePage({ onGoHome }) {
       ) : effectiveStep === 2 ? (
         <MeetingInfoView onSubmit={() => setStep(3)} />
       ) : effectiveStep === 3 ? (
-        // 배포 잠금 시 4번(응답 현황 확인)이 아직 잠겨 있으면 다음 단계 진입 버튼을 숨긴다
-        <ReviewRequestSentView
-          onViewResponses={IS_FLOW_LOCKED && MAX_UNLOCKED_NUMBER < 4 ? undefined : () => setStep(4)}
-        />
+        // 배포 잠금 시 다음 단계(응답 현황 확인)는 아직 잠겨 있어 진입 버튼을 숨긴다
+        <ReviewRequestSentView onViewResponses={IS_FLOW_LOCKED ? undefined : () => setStep(4)} />
       ) : effectiveStep === 4 ? (
         <ResponseStatusView onConfirm={handleConfirm} />
       ) : (
