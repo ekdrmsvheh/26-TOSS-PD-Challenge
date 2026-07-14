@@ -99,11 +99,31 @@ function AvailableSchedulePage({ onGoHome }) {
   );
 }
 
+// "시작하기"로 플로우에 새로 진입할 때 이전 세션에서 남은 진행 상태(추천 시간 결과, 참여 인원,
+// 단계 등)를 지운다. usePersistentState는 sessionStorage 기반이라 새로고침 중에는 값을 유지해야
+// 하지만, 홈에서 플로우를 다시 "시작"하는 시점에는 항상 빈 상태(1단계, 조건 미입력)로 시작해야 한다.
+const clearFlowStorage = () => {
+  try {
+    Object.keys(sessionStorage)
+      .filter((key) => key.startsWith('meetfit:') && key !== 'meetfit:page')
+      .forEach((key) => sessionStorage.removeItem(key));
+  } catch {
+    /** 시크릿 모드 등으로 접근 불가하면 무시 (애초에 저장도 안 됐을 것) */
+  }
+};
+
 function MeetFitApp() {
   const [page, setPage] = usePersistentState('meetfit:page', 'intro');
 
   if (page === 'intro') {
-    return <IntroView onStart={() => setPage('flow')} />;
+    return (
+      <IntroView
+        onStart={() => {
+          clearFlowStorage();
+          setPage('flow');
+        }}
+      />
+    );
   }
 
   return <AvailableSchedulePage onGoHome={() => setPage('intro')} />;
