@@ -67,15 +67,11 @@ export function IntroView({ onStart, sx }) {
             </Typography>
 
             <Stack alignItems="center" sx={{ maxWidth: 460 }}>
-              <Typography sx={{ fontSize: '1.375rem', fontWeight: 500, color: 'text.secondary', textAlign: 'center', lineHeight: 1.4 }}>
-                2가지 시나리오를 준비했어요
-              </Typography>
-              <Box sx={{ height: '1.375rem' }} />
               <Typography sx={{ fontSize: '1.375rem', fontWeight: 500, color: 'text.secondary', textAlign: 'center', lineHeight: 1.4, wordBreak: 'keep-all' }}>
-                한 눈에 빈 시간을 찾고 빠르게 미팅을 확정하는 경험
+                빠르게 확정되는 상황과, 조율이 필요한 상황
               </Typography>
               <Typography sx={{ fontSize: '1.375rem', fontWeight: 500, color: 'text.secondary', textAlign: 'center', lineHeight: 1.4, wordBreak: 'keep-all' }}>
-                조정이 필요한 상황에서의 경험
+                두 가지 흐름으로 미팅 조율 경험을 설계했습니다
               </Typography>
             </Stack>
           </Stack>
