@@ -48,6 +48,8 @@ const cellStyle = (state, scenario) => {
  * 2. "상세 일정 보기"가 꺼져 있으면 색 블록만 노출
  * 3. 켜면 events의 참석자별 일정이 셀 안에 펼쳐지고, isConflict인 일정은 속이 빈 점 마커 +
  *    강조색(#C37500)으로 표시되어 "이 일정 때문에 조정이 필요하다"는 걸 짚어준다
+ * 4. clickableKeys에 포함된 셀(추천 후보와 연결된 셀)은 버튼으로 렌더링되어 클릭 시
+ *    onCellClick이 호출된다 — 추천 시간 카드의 선택/해제와 양방향으로 동기화하는 용도
  *
  * Props:
  * @param {'recommend'|'adjust'} scenario - 전원 참석 가능(blue)/조정 필요(orange) 시나리오 [Optional, 기본값: 'recommend']
@@ -56,6 +58,9 @@ const cellStyle = (state, scenario) => {
  * @param {object} cellStates - `${dayIndex}-${hourIndex}` → 셀 상태 맵 [Optional]
  * @param {object} events - `${dayIndex}-${hourIndex}` → [{ person, title, isConflict }] 상세보기용 일정 맵.
  *   person이 없으면(예: "점심시간") 이름 없이 title만 표시한다 [Optional]
+ * @param {Set<string>} clickableKeys - 추천 후보와 연결된 셀 키(`${dayIndex}-${hourIndex}`) 집합.
+ *   포함된 셀만 클릭 가능한 버튼으로 렌더링된다 [Optional]
+ * @param {function} onCellClick - clickableKeys에 포함된 셀 클릭 시 호출 (key) => void [Optional]
  * @param {object} sx - 추가 스타일 [Optional]
  *
  * Example usage:
@@ -65,9 +70,11 @@ const cellStyle = (state, scenario) => {
  *   hours={hours}
  *   cellStates={{ '0-1': 'highlight-primary', '1-3': 'highlight' }}
  *   events={{ '0-0': [{ person: '정희', title: '주간회의', isConflict: false }] }}
+ *   clickableKeys={new Set(['0-1', '1-3'])}
+ *   onCellClick={(key) => toggleSlotByCellKey(key)}
  * />
  */
-export function CalendarAvailabilityCard({ scenario = 'recommend', days, hours, cellStates = {}, events = {}, sx }) {
+export function CalendarAvailabilityCard({ scenario = 'recommend', days, hours, cellStates = {}, events = {}, clickableKeys, onCellClick, sx }) {
   const [showDetail, setShowDetail] = useState(false);
 
   return (
@@ -120,17 +127,28 @@ export function CalendarAvailabilityCard({ scenario = 'recommend', days, hours, 
               const key = `${dayIndex}-${hourIndex}`;
               const state = cellStates[key] ?? 'unavailable';
               const cellEvents = events[key] ?? [];
+              const isClickable = clickableKeys?.has(key);
               return (
                 <Box
                   key={key}
+                  component={isClickable ? 'button' : 'div'}
+                  type={isClickable ? 'button' : undefined}
+                  onClick={isClickable ? () => onCellClick?.(key) : undefined}
                   sx={{
                     ...cellStyle(state, scenario),
                     borderRadius: '6px',
-                    minHeight: '44px',
+                    // 상세보기 OFF: 32px 고정(Figma 심플 모드 그리드 전체 360px 기준). ON: 이벤트
+                    // 목록 길이에 맞춰 자연스럽게 늘어나도록 minHeight 강제하지 않는다
+                    minHeight: showDetail ? undefined : '32px',
                     display: 'flex',
                     flexDirection: 'column',
+                    alignItems: 'stretch',
                     p: showDetail ? '8px 10px' : 0,
                     gap: '3px',
+                    m: 0,
+                    fontFamily: 'inherit',
+                    cursor: isClickable ? 'pointer' : 'default',
+                    '&:hover': isClickable ? { filter: 'brightness(0.97)' } : {},
                   }}
                 >
                   {showDetail &&

@@ -93,6 +93,7 @@ function AvailableSchedulePage({ onGoHome }) {
       ) : (
         <MeetingConfirmedView
           {...(confirmedCandidate ? { confirmedCandidate } : {})}
+          onComplete={onGoHome}
         />
       )}
     </TestFlowShell>

@@ -15,15 +15,15 @@ import { primitives } from '../../styles/themes';
  * AttendeeReviewView 템플릿
  *
  * "일정 확인 후 응답" 화면 — 주최자가 보낸 검토 요청을 받은 참석자가 자신의 역할을 확인하고,
- * 후보 3개 각각에 대해 캘린더에 없는 숨은 조건(가능·비선호·조정 필요·불가)을 응답하는 화면.
- * Figma 최종 시안(node-id 339-47258, 프레임 339:47258) 실측값 기준으로 구현했다.
+ * 후보 3개 각각에 대해 참석 가능 여부(가능해요·가능하지만 피하고 싶어요·참석 어려워요)를 응답하는 화면.
+ * Figma 최종 시안(node-id 353-39477, 프레임 353:39477) 실측값 기준으로 구현했다.
  *
  * 동작 방식:
  * 1. 좌측 "미팅 정보" 카드는 미팅 목적, 나의 역할(필수/선택참여 배지 + 사유), 참석 인원을 읽기 전용으로 보여준다
- * 2. 우측 "가능한 시간을 알려주세요" 카드는 후보 3개마다 가능/비선호/조정 필요/불가 중 하나를 고르고
- *    선택 메모를 남길 수 있다 (후보는 확정 일정이 아니라 응답 대상이다)
- * 3. 3개 후보 모두 응답해야 "응답 보내기" 버튼이 활성화된다
- * 4. 제출하면 카드 목록 대신 제출 완료 상태(체크 아이콘 + 안내 문구)를 보여준다
+ * 2. 우측 상단 안내 블록은 후보 선정 기준과 응답 기한을 안내한다
+ * 3. 후보 3개는 각각 개별 카드로, 3지선다(가능해요/가능하지만 피하고 싶어요/참석 어려워요) 응답과 선택 메모를 받는다
+ * 4. 3개 후보 모두 응답해야 "응답 보내기" 버튼이 활성화된다
+ * 5. 제출하면 카드 목록 대신 제출 완료 상태(체크 아이콘 + 안내 문구)를 보여준다
  *
  * Props:
  * @param {object} meeting - 미팅 정보 { host, title, purpose, deadline } [Optional, 기본값: 데모 데이터]
@@ -43,8 +43,8 @@ const optionalAvatarTones = [primitives.grey[500], primitives.grey[400]];
 const DEFAULT_MEETING = {
   host: '이지혜',
   title: 'AI 운영 에이전트 방향 결정 미팅',
-  purpose: '1차 구현 범위를 정하고 다음 개발 단계를 시작하기 위한 미팅이에요.',
-  deadline: '7월 10일 (금) 오후 1시',
+  purpose: '본 회의는 하반기 AI 운영 에이전트의 개발 우선순위를 확정하고, 각 팀별 리소스 배분 및 핵심 마일스톤을 동기화하는 것을 목표로 합니다.',
+  deadline: '7월 10일(금) 오후 1시',
 };
 
 const DEFAULT_ME = {
@@ -70,10 +70,9 @@ const DEFAULT_CANDIDATES = [
 ];
 
 const RESPONSE_OPTIONS = [
-  { value: 'available', label: '가능' },
-  { value: 'reluctant', label: '비선호' },
-  { value: 'adjust', label: '조정 필요' },
-  { value: 'unavailable', label: '불가' },
+  { value: 'available', label: '가능해요' },
+  { value: 'reluctant', label: '가능하지만 피하고 싶어요' },
+  { value: 'unavailable', label: '참석 어려워요' },
 ];
 
 // 아바타에는 성을 뺀 이름 2글자만 표시한다 (예: '임정희' → '정희')
@@ -154,7 +153,7 @@ function InfoRow({ label, children }) {
   );
 }
 
-const divider = <Box sx={{ height: '1px', width: '100%', bgcolor: primitives.line.neutral }} />;
+const infoValueSx = { fontSize: 14, fontWeight: 400, lineHeight: 1.43, letterSpacing: '0.2px', color: 'text.primary' };
 
 export function AttendeeReviewView({
   meeting = DEFAULT_MEETING,
@@ -212,9 +211,7 @@ export function AttendeeReviewView({
       <Typography variant="h5" sx={{ mb: '16px' }}>미팅 정보</Typography>
       <Stack spacing="20px">
         <InfoRow label="미팅 목적">
-          <Typography sx={{ fontSize: 14, fontWeight: 500, lineHeight: 1.43, letterSpacing: '0.2px' }}>
-            {meeting.purpose}
-          </Typography>
+          <Typography sx={infoValueSx}>{meeting.purpose}</Typography>
         </InfoRow>
 
         <InfoRow label="나의 역할">
@@ -222,9 +219,7 @@ export function AttendeeReviewView({
             <Box component="span" sx={badgeSx(me.level === 'required')}>
               {me.level === 'required' ? '필수참여' : '선택참여'}
             </Box>
-            <Typography sx={{ fontSize: 14, fontWeight: 500, lineHeight: 1.43, letterSpacing: '0.2px' }}>
-              {me.reason}
-            </Typography>
+            <Typography sx={infoValueSx}>{me.reason}</Typography>
           </Stack>
         </InfoRow>
 
@@ -253,67 +248,75 @@ export function AttendeeReviewView({
     </CardContainer>
   );
 
-  const responseCard = (
-    <CardContainer variant="elevation" padding="card" sx={{ borderRadius: '16px' }}>
-      <Stack spacing="20px">
-        <Typography sx={{ fontSize: 17, fontWeight: 600, lineHeight: 1.41 }}>가능한 시간을 알려주세요</Typography>
-        {divider}
-
-        {candidates.map((candidate, index) => (
-          <Box key={candidate.id}>
-            {index > 0 && <Box sx={{ mb: '20px' }}>{divider}</Box>}
-            <Stack spacing="12px">
-              <Typography sx={{ fontSize: 20, fontWeight: 700, lineHeight: 1.4, letterSpacing: '-0.24px' }}>
-                {candidate.date} {candidate.time}
-              </Typography>
-              <Stack spacing="9px">
-                <Stack direction="row" spacing="6px">
-                  {RESPONSE_OPTIONS.map((option) => (
-                    <Box
-                      key={option.value}
-                      component="button"
-                      type="button"
-                      onClick={() => handleSelect(candidate.id, option.value)}
-                      sx={responseOptionSx(responses[candidate.id] === option.value)}
-                    >
-                      {option.label}
-                    </Box>
-                  ))}
-                </Stack>
-                <TextField
-                  fullWidth
-                  value={notes[candidate.id] ?? ''}
-                  onChange={(event) => handleNoteChange(candidate.id, event.target.value)}
-                  placeholder="메모 남기기 (선택)"
-                  sx={fieldSx}
-                />
-              </Stack>
-            </Stack>
-          </Box>
-        ))}
+  // 우측 상단 안내 블록 (Figma "Section Message") — 옅은 블루 틴트 배경 + 좌상단 하이라이트 + 소프트 블루 보더
+  const guideMessage = (
+    <Box
+      key="guide"
+      sx={{
+        width: '100%',
+        p: '20px',
+        borderRadius: '12px',
+        border: '1px solid',
+        borderColor: alpha('#00B7FF', 0.4),
+        background:
+          'radial-gradient(130% 150% at 38% 0%, rgba(69,137,247,0.12) 0%, rgba(69,137,247,0) 55%), rgba(232,243,255,0.7)',
+      }}
+    >
+      <Stack spacing="12px">
+        <Typography sx={{ fontSize: 16, fontWeight: 600, color: primitives.blue[600], lineHeight: 1.5 }}>
+          일정을 확인해 주세요
+        </Typography>
+        <Typography sx={{ fontSize: 15, fontWeight: 400, lineHeight: 1.47, letterSpacing: '0.144px' }}>
+          캘린더 기준으로 모두 참석 가능한 후보를 골랐어요.
+          <br />각 시간의 참석 가능 여부를 선택해 주세요.
+        </Typography>
+        <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'grey.500', lineHeight: 1.43, letterSpacing: '0.2px' }}>
+          {meeting.deadline}까지 응답해 주세요.
+        </Typography>
       </Stack>
-    </CardContainer>
+    </Box>
   );
 
+  const slotCards = candidates.map((candidate) => (
+    <CardContainer key={candidate.id} variant="outlined" padding="card" sx={{ borderRadius: '18px' }}>
+      <Stack spacing="12px">
+        <Typography sx={{ fontSize: 20, fontWeight: 700, lineHeight: 1.4, letterSpacing: '-0.24px' }}>
+          {candidate.date} {candidate.time}
+        </Typography>
+        <Stack spacing="9px">
+          <Stack direction="row" spacing="6px">
+            {RESPONSE_OPTIONS.map((option) => (
+              <Box
+                key={option.value}
+                component="button"
+                type="button"
+                onClick={() => handleSelect(candidate.id, option.value)}
+                sx={responseOptionSx(responses[candidate.id] === option.value)}
+              >
+                {option.label}
+              </Box>
+            ))}
+          </Stack>
+          <TextField
+            fullWidth
+            value={notes[candidate.id] ?? ''}
+            onChange={(event) => handleNoteChange(candidate.id, event.target.value)}
+            placeholder="이유나 조건 작성하기 (선택)"
+            sx={fieldSx}
+          />
+        </Stack>
+      </Stack>
+    </CardContainer>
+  ));
+
   const submitRow = (
-    <Stack
-      key="submit"
-      direction="row"
-      justifyContent="space-between"
-      alignItems="center"
-      spacing="16px"
-      sx={{ px: '4px' }}
-    >
-      <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>
-        응답 기한 {meeting.deadline}까지 {candidates.length}개 후보 모두 응답해 주세요.
-      </Typography>
+    <Stack key="submit" direction="row" justifyContent="flex-end" alignItems="center" sx={{ py: '8px' }}>
       <Button
         variant="contained"
         color="primary"
         size="large"
         disabled={!canSubmit}
         onClick={handleSubmit}
-        sx={{ flexShrink: 0 }}
       >
         응답 보내기
       </Button>
@@ -325,7 +328,7 @@ export function AttendeeReviewView({
       title={pageTitle}
       sx={sx}
       left={leftCard}
-      right={[responseCard, submitRow]}
+      right={[guideMessage, ...slotCards, submitRow]}
     />
   );
 }

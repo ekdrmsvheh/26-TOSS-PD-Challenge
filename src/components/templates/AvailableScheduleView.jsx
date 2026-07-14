@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -17,7 +17,7 @@ import { TimeSelectPopover } from '../input/TimeSelectPopover';
 import { SelectTrigger } from '../input/SelectTrigger';
 import { CardPageLayout } from '../layout/CardPageLayout';
 import { primitives } from '../../styles/themes';
-import { testImages } from '../../utils/pexels-test-data';
+import { memberThumbnail } from '../../data/memberThumbnails';
 
 /**
  * AvailableScheduleView 템플릿
@@ -30,7 +30,10 @@ import { testImages } from '../../utils/pexels-test-data';
  * 1. hasConditions가 false면 우측에 빈 상태(안내 문구)만 보여준다
  * 2. hasConditions가 true면 추천 시간 카드(RecommendedTimeCard, 3열 그리드+모두보기) + 캘린더 카드
  *    (CalendarAvailabilityCard, 범례+상세보기) + "다음" 버튼을 보여준다
- * 3. 추천 시간 카드의 대표(첫) 슬롯과 캘린더의 대표 셀이 같은 시간을 가리키며 컬러로 서로 연결된다
+ * 3. 추천 시간 카드는 참석자에게 확인 요청할 "후보 시간 묶음"을 고르는 체크박스 선택 UI다(최종 시간
+ *    1개를 확정하는 화면이 아니다). 기본 3개가 선택된 채 시작하고, 카드 클릭으로 선택/해제한다
+ *    (최소 1개 유지, 모든 후보 보기 시 최대 5개). 선택 상태는 캘린더 셀 강조와 양방향 동기화되어
+ *    캘린더 셀을 클릭해도 카드 선택이 토글된다. "다음"은 1개 이상 선택돼야 활성화된다
  * 4. 캘린더 셀 색은 "추천 가능 시간"을 의미한다 (하드코딩 데모 데이터, 실제 일정 연동 없음). 상세보기를
  *    켜면 참석자별 일정이 셀 안에 펼쳐지고, 조정 원인이 되는 일정에는 점 마커 + 볼드가 붙는다
  * 5. 참여 인원 아바타의 +/편집 버튼을 누르면 AttendeeSelectDialog가 열려 필수/선택 토글과 삭제로 참여 인원을 편집한다
@@ -61,10 +64,9 @@ function EmptyScheduleCalendarIcon(props) {
   );
 }
 
-// 참여 인원 선택 모달(AttendeeSelectDialog)에서는 이니셜 대신 인물 사진 썸네일을 쓴다 — 프로젝트에 이미 있는
-// Pexels 테스트 데이터(portrait 카테고리)를 데모용 프로필 사진으로 재사용 (utils/pexels-test-data.js)
-// portrait 카테고리 이미지가 8장뿐이라 index를 modulo로 순환시켜 재사용한다.
-const portraitThumb = (index) => testImages.portrait[index % testImages.portrait.length].src.thumbnail;
+// 참여 인원 선택 모달(AttendeeSelectDialog)에서는 이니셜 대신 인물 사진 썸네일을 쓴다.
+// `src/assets/member thumbnail/`의 멤버 썸네일(6장)을 index modulo로 순환시켜 재사용한다.
+const portraitThumb = (index) => memberThumbnail(index);
 
 const HOST = { fullName: '이지혜', role: '제품팀 · 프로덕트 디자이너', avatarSrc: portraitThumb(0) };
 
@@ -124,24 +126,25 @@ const TEST_DATE_RANGE = { start: new Date(2026, 6, 13), end: new Date(2026, 6, 1
 const TEST_SEARCH_START = '오전 9:00';
 const TEST_SEARCH_END = '오후 5:00';
 
-// 추천 시간 카드 슬롯 — slots[0]이 대표(가장 빠른) 슬롯으로 컬러 강조되고, 캘린더의 같은 셀과 연결된다.
-// 시나리오 A(해피 패스)/B(조정 상황) 각각 Figma 최종본 데이터를 그대로 반영한다 — B의 2·3번 캡션이
-// 동일한 것("지혜/상륜님...")과 4·5번 캡션이 동일한 것("정희님 일정 조정 시 전원 참여")은 Figma 원본
-// 그대로다(오타로 보이지만 정확한 재현을 위해 그대로 둠)
+// 추천 시간 카드 슬롯 — 각 슬롯의 cellKey(`${dayIndex}-${hourIndex}`)로 캘린더의 같은 셀과
+// 연결된다(선택 상태가 카드↔셀 양방향으로 동기화되는 기준). 시나리오 A(해피 패스)/B(조정 상황)
+// 각각 Figma 최종본 데이터를 그대로 반영한다 — B의 2·3번 캡션이 동일한 것("지혜/상륜님...")과
+// 4·5번 캡션이 동일한 것("정희님 일정 조정 시 전원 참여")은 Figma 원본 그대로다(오타로 보이지만
+// 정확한 재현을 위해 그대로 둠)
 const HAPPY_SLOTS = [
-  { dateTime: '7/13(월) 오전 10:00', caption: '전원 참석, 가장 빠른 시간' },
-  { dateTime: '7/14(화) 오후 12:00', caption: '전원 참석, 두번째로 빠른 시간' },
-  { dateTime: '7/15(수) 오후 5:00', caption: '전원 참석, 세번째로 빠른 시간' },
-  { dateTime: '7/16(목) 오전 11:00', caption: '전원 참석, 네번째로 빠른 시간' },
-  { dateTime: '7/16(목) 오후 2:00', caption: '전원 참석, 다섯번째로 빠른 시간' },
+  { dateTime: '7/13(월) 오전 10:00', caption: '전원 참석, 가장 빠른 시간', cellKey: '0-1' },
+  { dateTime: '7/14(화) 오후 12:00', caption: '전원 참석, 두번째로 빠른 시간', cellKey: '1-3' },
+  { dateTime: '7/15(수) 오후 5:00', caption: '전원 참석, 세번째로 빠른 시간', cellKey: '2-8' },
+  { dateTime: '7/16(목) 오전 11:00', caption: '전원 참석, 네번째로 빠른 시간', cellKey: '3-2' },
+  { dateTime: '7/16(목) 오후 2:00', caption: '전원 참석, 다섯번째로 빠른 시간', cellKey: '3-5' },
 ];
 
 const ADJUST_SLOTS = [
-  { dateTime: '7/14(화) 오전 11:00', caption: '정희님 선택 참여 일정 조정 시, 전원 참석' },
-  { dateTime: '7/13(월) 오후 2:00', caption: '지혜/상륜님 선택 참여 일정 조정 시, 전원 참석' },
-  { dateTime: '7/15(수) 오후 4:00', caption: '지혜/상륜님 선택 참여 일정 조정 시, 전원 참석' },
-  { dateTime: '7/16(목) 오전 11:00', caption: '정희님 일정 조정 시 전원 참여' },
-  { dateTime: '7/16(목) 오후 2:00', caption: '정희님 일정 조정 시 전원 참여' },
+  { dateTime: '7/14(화) 오전 11:00', caption: '정희님 선택 참여 일정 조정 시, 전원 참석', cellKey: '1-2' },
+  { dateTime: '7/13(월) 오후 2:00', caption: '지혜/상륜님 선택 참여 일정 조정 시, 전원 참석', cellKey: '0-5' },
+  { dateTime: '7/15(수) 오후 4:00', caption: '지혜/상륜님 선택 참여 일정 조정 시, 전원 참석', cellKey: '2-7' },
+  { dateTime: '7/16(목) 오전 11:00', caption: '정희님 일정 조정 시 전원 참여', cellKey: '3-2' },
+  { dateTime: '7/16(목) 오후 2:00', caption: '정희님 일정 조정 시 전원 참여', cellKey: '3-5' },
 ];
 
 const days = [
@@ -154,23 +157,10 @@ const days = [
 
 const hours = ['오전 9:00', '오전 10:00', '오전 11:00', '오후 12:00', '오후 1:00', '오후 2:00', '오후 3:00', '오후 4:00', '오후 5:00'];
 
-// `${dayIndex}-${hourIndex}` 기준 데모 캘린더 셀 상태 — 각 시나리오의 추천 시간 슬롯과 연결된다
-const HAPPY_CELL_STATES = {
-  '0-1': 'highlight-primary', // 13일(월) 오전 10:00 — HAPPY_SLOTS[0]
-  '1-3': 'highlight', // 14일(화) 오후 12:00
-  '2-7': 'highlight', // 15일(수) 오후 4:00
-  '3-2': 'empty', // 16일(목) 오전 11:00 — 아무도 일정 없는 빈 시간
-  '4-5': 'empty', // 17일(금) 오후 2:00
-};
-
-const ADJUST_CELL_STATES = {
-  '1-2': 'highlight-primary', // 14일(화) 오전 11:00 — ADJUST_SLOTS[0]
-  '0-5': 'highlight', // 13일(월) 오후 2:00
-  '2-7': 'highlight', // 15일(수) 오후 4:00
-  '3-0': 'highlight', // 16일(목) 오전 9:00
-  '3-2': 'highlight', // 16일(목) 오전 11:00
-  '4-4': 'highlight', // 17일(금) 오후 1:00
-};
+// 추천 후보와 무관한 순수 정보성 셀(선택 불가) — 나머지 강조 셀은 전부 슬롯 선택 상태에서
+// 매 렌더 시 파생된다(derivedCellStates, 컴포넌트 본문 참고)
+const HAPPY_BASE_CELL_STATES = { '4-5': 'empty' }; // 17일(금) 오후 2:00 — 아무도 일정 없는 빈 시간
+const ADJUST_BASE_CELL_STATES = {};
 
 // 상세보기 ON 시 셀 안에 펼쳐지는 참석자별 일정 — Figma 최종본 캘린더 상세보기 프레임을 그대로 옮김
 // (참여 인원 이름은 좌측 카드 참석자와 무관하게 Figma 원본 표기를 그대로 사용한다)
@@ -311,8 +301,46 @@ export function AvailableScheduleView({ hasConditions = false, scenario = 'A', o
   const isAdjust = scenario === 'B';
   const cardScenario = isAdjust ? 'adjust' : 'recommend';
   const slots = isAdjust ? ADJUST_SLOTS : HAPPY_SLOTS;
-  const cellStates = isAdjust ? ADJUST_CELL_STATES : HAPPY_CELL_STATES;
+  const baseCellStates = isAdjust ? ADJUST_BASE_CELL_STATES : HAPPY_BASE_CELL_STATES;
   const calendarEvents = isAdjust ? ADJUST_EVENTS : HAPPY_EVENTS;
+
+  // 추천 후보 선택 상태 — "후보 시간 묶음"을 고르는 체크박스 선택 집합(dateTime 기준).
+  // 기본 3개(목록상 앞의 3개)가 선택된 상태로 시작하고, 시나리오가 바뀌면 다시 초기화된다
+  const [selectedSlotKeys, setSelectedSlotKeys] = useState(() => new Set(slots.slice(0, 3).map((s) => s.dateTime)));
+
+  useEffect(() => {
+    setSelectedSlotKeys(new Set(slots.slice(0, 3).map((s) => s.dateTime)));
+  }, [slots]);
+
+  // 최소 1개 유지, 최대 5개 제한을 지키며 토글한다 — 카드 클릭과 캘린더 셀 클릭이 공유하는 핸들러
+  const handleToggleSlot = (dateTime) => {
+    setSelectedSlotKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(dateTime)) {
+        if (next.size <= 1) return prev;
+        next.delete(dateTime);
+      } else {
+        if (next.size >= 5) return prev;
+        next.add(dateTime);
+      }
+      return next;
+    });
+  };
+
+  const handleCalendarCellClick = (cellKey) => {
+    const slot = slots.find((s) => s.cellKey === cellKey);
+    if (slot) handleToggleSlot(slot.dateTime);
+  };
+
+  // 캘린더 셀 강조는 선택 상태에서 파생된다(단일 소스) — 선택된 슬롯 중 목록상 가장 앞선 것만
+  // primary(굵은 강조), 나머지 선택된 슬롯은 secondary로 표시하고, 선택 해제되면 강조가 사라진다
+  const firstSelectedDateTime = slots.find((slot) => selectedSlotKeys.has(slot.dateTime))?.dateTime;
+  const cellStates = { ...baseCellStates };
+  slots.forEach((slot) => {
+    if (!selectedSlotKeys.has(slot.dateTime)) return;
+    cellStates[slot.cellKey] = slot.dateTime === firstSelectedDateTime ? 'highlight-primary' : 'highlight';
+  });
+  const clickableCellKeys = new Set(slots.map((slot) => slot.cellKey));
 
   const [participants, setParticipants] = useState([]);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -573,9 +601,9 @@ export function AvailableScheduleView({ hasConditions = false, scenario = 'A', o
       sx={{ height: hasConditions ? 'auto' : '600px', display: 'flex', flexDirection: 'column' }}
     >
       {!hasConditions && (
-        <>
-          <Typography variant="h5" sx={{ mb: 0 }}>추천 시간</Typography>
-          <Stack alignItems="center" justifyContent="center" spacing="20px" sx={{ flex: 1 }}>
+        <Stack spacing="20px" sx={{ alignItems: 'flex-start' }}>
+          <Typography variant="h5">추천 시간</Typography>
+          <Stack alignItems="center" spacing="20px" sx={{ pt: '100px', pb: '100px', px: '40px', width: '100%' }}>
             <EmptyScheduleCalendarIcon sx={{ fontSize: 40, color: 'grey.400' }} />
             <Typography
               sx={{
@@ -592,10 +620,17 @@ export function AvailableScheduleView({ hasConditions = false, scenario = 'A', o
               가능한 시간을 추천해 드려요
             </Typography>
           </Stack>
-        </>
+        </Stack>
       )}
 
-      {hasConditions && <RecommendedTimeCard scenario={cardScenario} slots={slots} />}
+      {hasConditions && (
+        <RecommendedTimeCard
+          scenario={cardScenario}
+          slots={slots}
+          selectedKeys={selectedSlotKeys}
+          onToggleSlot={handleToggleSlot}
+        />
+      )}
     </CardContainer>
   );
 
@@ -607,6 +642,8 @@ export function AvailableScheduleView({ hasConditions = false, scenario = 'A', o
         hours={hours}
         cellStates={cellStates}
         events={calendarEvents}
+        clickableKeys={clickableCellKeys}
+        onCellClick={handleCalendarCellClick}
       />
     </CardContainer>
   ) : null;
@@ -617,7 +654,7 @@ export function AvailableScheduleView({ hasConditions = false, scenario = 'A', o
         variant="contained"
         color="primary"
         size="large"
-        disabled={!hasConditions}
+        disabled={!hasConditions || selectedSlotKeys.size === 0}
         onClick={onNext}
       >
         다음

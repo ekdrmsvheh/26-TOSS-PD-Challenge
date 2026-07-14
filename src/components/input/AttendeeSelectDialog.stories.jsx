@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import Button from '@mui/material/Button';
 import { AttendeeSelectDialog } from './AttendeeSelectDialog';
-import { testImages } from '../../utils/pexels-test-data';
+import { memberThumbnail } from '../../data/memberThumbnails';
 
-// 아바타 이미지 컴포넌트 자체를 테스트하는 스토리이므로 실제 이미지(portrait 테스트 데이터)를 사용한다
-const portraitThumb = (index) => testImages.portrait[index].src.thumbnail;
+// 아바타는 `src/assets/member thumbnail/` 멤버 썸네일을 사용한다 (6장 순환)
+const portraitThumb = (index) => memberThumbnail(index);
 
 const host = { name: '이지혜', role: '제품팀 · 프로덕트 디자이너', avatarSrc: portraitThumb(0) };
 

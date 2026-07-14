@@ -10,14 +10,27 @@ import TextField from '@mui/material/TextField';
 import Avatar from '@mui/material/Avatar';
 import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
+import SvgIcon from '@mui/material/SvgIcon';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
-import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import { AttendeeRow } from './AttendeeRow';
 
 // 카드 안 행 사이 구분선 — Figma "Line/Normal/Neutral"(#70737C 16%). 컴포넌트 보더(divider)보다 옅다
 const ROW_DIVIDER = 'rgba(112, 115, 124, 0.16)';
+
+// Figma "Icon/Normal/Persons"(node 119:3848) 원본 path — 참석자 빈 상태(선택 전) 전용 그룹 아이콘.
+// 원본 지정색 #B0B8C1(label/muted=grey.400)은 currentColor로 빼서 sx color로 넘겨 쓴다.
+function PersonsIcon(props) {
+  return (
+    <SvgIcon viewBox="0 0 40 40" {...props}>
+      <path d="M18.5 13.3327C18.5 9.74283 21.4101 6.83268 24.9999 6.83268C28.5898 6.83268 31.4999 9.74283 31.4999 13.3327C31.4999 16.9225 28.5898 19.8327 24.9999 19.8327C21.4101 19.8327 18.5 16.9225 18.5 13.3327Z" />
+      <path d="M24.9999 22.665C21.5768 22.665 18.3691 23.4312 15.964 24.9118C13.5359 26.4065 11.8332 28.7098 11.8332 31.665L11.833 31.7506C11.8319 32.0391 11.8303 32.4357 11.9276 32.7976C12.1824 33.7446 12.9221 34.4842 13.8691 34.7389C14.231 34.8362 14.6275 34.8346 14.916 34.8335L15.0016 34.8332L34.9999 34.8319L35.0852 34.8321C35.3727 34.8332 35.7679 34.8347 36.1287 34.738C37.0774 34.4837 37.8184 33.7426 38.0727 32.7938C38.1694 32.4331 38.1678 32.0379 38.1667 31.7504L38.1665 31.665C38.1665 28.7098 36.4638 26.4065 34.0358 24.9118C31.6306 23.4312 28.423 22.665 24.9999 22.665Z" />
+      <path d="M4.95744 26.8848C6.65458 25.7833 8.84665 25.2424 11.15 25.1727C9.74839 26.9068 8.83326 29.0836 8.83326 31.6649L8.83269 31.703C8.82885 31.9093 8.81285 32.767 9.03062 33.5766C9.14948 34.0185 9.31884 34.4388 9.53225 34.8311L4.16775 34.8315C2.87849 34.8316 1.83329 33.7865 1.83329 32.4972C1.83329 30.009 3.07872 28.1041 4.95744 26.8848Z" />
+      <path d="M10.8332 11.8325C8.16379 11.8325 5.99984 13.9965 5.99984 16.6659C5.99984 19.3352 8.16379 21.4992 10.8332 21.4992C13.5025 21.4992 15.6665 19.3352 15.6665 16.6659C15.6665 13.9965 13.5025 11.8325 10.8332 11.8325Z" />
+    </SvgIcon>
+  );
+}
 
 /**
  * AttendeeSelectDialog 컴포넌트
@@ -131,20 +144,15 @@ export function AttendeeSelectDialog({ open, onClose, host, directory = [], part
 
           <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* 주최자 카드 */}
-            <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.07)', borderRadius: '12px', boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.03)', pt: '16px', pb: '12px', px: '20px', flexShrink: 0 }}>
+            <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.07)', borderRadius: '12px', pt: '16px', pb: '12px', px: '20px', flexShrink: 0 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.700' }}>주최자</Typography>
               <AttendeeRow variant="plain" name={host.name} role={host.role} avatarSrc={host.avatarSrc} avatarColor={host.avatarColor} sx={{ py: '8px' }} />
             </Box>
 
             {/* 참석자 카드 */}
-            <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.07)', borderRadius: '12px', boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.03)', pt: '20px', pb: '8px', px: '20px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.07)', borderRadius: '12px', pt: '20px', pb: '8px', px: '20px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: '10px', flexShrink: 0 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.700' }}>
-              참석자
-              {draft.length > 0 && (
-                <Box component="span" sx={{ color: 'primary.main', ml: '4px' }}>{draft.length}</Box>
-              )}
-            </Typography>
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.700' }}>참석자</Typography>
             {draft.length > 0 && (
               <Button size="small" onClick={handleClearAll} sx={{ color: 'grey.500', fontSize: 13, textDecoration: 'underline' }}>
                 모두 지우기
@@ -156,6 +164,7 @@ export function AttendeeSelectDialog({ open, onClose, host, directory = [], part
             multiple
             disableCloseOnSelect
             openOnFocus
+            popupIcon={null}
             options={directory}
             value={selectedOptions}
             isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -228,13 +237,30 @@ export function AttendeeSelectDialog({ open, onClose, host, directory = [], part
                 </Paper>
               ),
             }}
-            sx={{ mb: '8px', flexShrink: 0, '& .MuiOutlinedInput-root': { borderRadius: '12px', fontSize: 15 } }}
+            sx={{
+              mb: '8px',
+              flexShrink: 0,
+              // 우측 쉐브론(팝업 인디케이터) 제거 — Figma Search Bar에는 트레일링 아이콘 없음
+              '& .MuiAutocomplete-popupIndicator': { display: 'none' },
+              // Figma "Search Bar" 컴포넌트 상태 정의 (node 286:32449)
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px', // --radius/12
+                fontSize: 15,
+                boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.03)', // input dropshadow
+                // default: 1px border/default(#e5e8eb)
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider', borderWidth: '1px' },
+                // hover: 1.5px blue/200(#90c2ff)
+                '&:hover:not(.Mui-focused) .MuiOutlinedInput-notchedOutline': { borderColor: '#90C2FF', borderWidth: '1.5px' },
+                // focus(selected): 1.5px accent/default(#2272eb = primary.dark)
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.dark', borderWidth: '1.5px' },
+              },
+            }}
           />
 
           {draft.length === 0 ? (
             <Stack alignItems="center" justifyContent="center" spacing="10px" sx={{ flex: 1 }}>
-              <GroupOutlinedIcon sx={{ fontSize: 28, color: 'grey.400' }} />
-              <Typography sx={{ fontSize: 13, color: 'grey.500' }}>함께할 동료를 선택해 주세요</Typography>
+              <PersonsIcon sx={{ fontSize: 40, color: 'grey.400' }} />
+              <Typography sx={{ fontSize: 15, fontWeight: 500, color: 'grey.500' }}>함께할 동료를 선택해 주세요</Typography>
             </Stack>
           ) : (
             <Stack sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>

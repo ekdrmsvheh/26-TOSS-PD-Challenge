@@ -12,41 +12,44 @@ const DEFAULT_DESCRIPTION = {
 };
 
 const COLLAPSED_COUNT = 3;
-
-// 슬롯 위치 기반 위계: 1등=primary, 2~3등(접힘 상태에서 보이는 나머지)=secondary,
-// "모든 후보 보기"로 펼쳤을 때 나오는 4등 이후는 전부 plain(무채색)
-const tierOf = (index) => {
-  if (index === 0) return 'primary';
-  if (index < COLLAPSED_COUNT) return 'secondary';
-  return 'plain';
-};
+const MAX_SELECTABLE = 5;
 
 /**
  * RecommendedTimeCard 컴포넌트
  *
- * "추천 시간" 카드 — 시간 조건에 맞는 후보를 3열 그리드로 보여준다. slots[0]이 대표(1등)
- * 후보로 배경 채움+굵은 accent 보더로 강조되고, 2·3등은 옅은 accent 보더, "모든 후보 보기"로
- * 펼쳤을 때 나오는 4등 이후는 전부 완전 무채색(참고용 옵션)으로 톤다운된다. scenario에 따라
- * 전원 참석 가능(blue)/조정 필요(orange) 톤과 안내 문구가 바뀐다.
+ * "추천 시간" 카드 — 참석자에게 확인 요청할 "후보 시간 묶음"을 고르는 체크박스형 선택 UI다
+ * (최종 시간 1개를 확정하는 UI가 아니다). 시간 조건에 맞는 후보를 3열 그리드로 보여주고,
+ * 각 카드를 클릭해 선택/해제할 수 있다. 선택된 후보 중 목록상 가장 앞선(가장 빠른) 것이
+ * primary(배경 채움+굵은 accent 보더)로, 나머지 선택된 후보는 secondary(옅은 accent 보더)로
+ * 강조되며 — 이 둘은 모두 체크 아이콘이 채워진다. 선택 해제된 후보는 plain(무채색+빈 원)이다.
+ * "모든 후보 보기" 토글을 켜면 4~5번째 후보까지 펼쳐서 선택할 수 있다.
  *
  * 동작 방식:
- * 1. 기본값은 접힘 상태 — 슬롯 3개까지만 노출
- * 2. "모든 후보 보기" 토글을 켜면 slots 전체(최대 2행)를 노출
- * 3. slots[0]이 대표 슬롯으로 취급되어 배경+보더로 강조된다 (tierOf 참고)
+ * 1. 기본값은 접힘 상태 — 슬롯 3개까지만 노출(모두 기본 선택된 상태로 전달받는다)
+ * 2. "모든 후보 보기" 토글을 켜면 slots 전체(최대 5개, 2행)를 노출
+ * 3. 카드 클릭 시 onToggleSlot(dateTime)을 호출한다 — 최소 1개 유지·최대 5개 제한 같은 실제
+ *    선택 로직은 상위(AvailableScheduleView)에서 selectedKeys를 갱신하는 방식으로 처리한다
+ * 4. selectedKeys에 없는 슬롯은 plain, 있으면 selectedKeys 순서상 가장 먼저 선택된 슬롯만 primary,
+ *    나머지는 secondary로 표시된다
  *
  * Props:
  * @param {'recommend'|'adjust'} scenario - 전원 참석 가능(blue)/조정 필요(orange) 시나리오 [Optional, 기본값: 'recommend']
- * @param {{dateTime: string, caption: string}[]} slots - 시간 후보 목록. 첫 항목이 대표 슬롯 [Required]
+ * @param {{dateTime: string, caption: string}[]} slots - 시간 후보 목록(최대 5개) [Required]
+ * @param {Set<string>} selectedKeys - 선택된 슬롯의 dateTime 집합 [Optional, 기본값: 빈 Set]
+ * @param {function} onToggleSlot - 카드 클릭 시 호출 (dateTime) => void [Optional]
  * @param {string} description - 안내 문구 [Optional, scenario 기본 문구 사용]
  * @param {object} sx - 추가 스타일 [Optional]
  *
  * Example usage:
- * <RecommendedTimeCard scenario="recommend" slots={[{ dateTime: '7/13(월) 오전 10:00', caption: '전원 참석' }]} />
+ * <RecommendedTimeCard scenario="recommend" slots={slots} selectedKeys={selectedKeys} onToggleSlot={handleToggleSlot} />
  */
-export function RecommendedTimeCard({ scenario = 'recommend', slots = [], description, sx }) {
+export function RecommendedTimeCard({ scenario = 'recommend', slots = [], selectedKeys, onToggleSlot, description, sx }) {
   const [showAll, setShowAll] = useState(false);
   const accent = scenario === 'adjust' ? 'orange' : 'blue';
   const visibleSlots = showAll ? slots : slots.slice(0, COLLAPSED_COUNT);
+  const keys = selectedKeys ?? new Set();
+  const firstSelectedDateTime = slots.find((slot) => keys.has(slot.dateTime))?.dateTime;
+  const isAtMax = keys.size >= MAX_SELECTABLE;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px', ...sx }}>
@@ -76,16 +79,27 @@ export function RecommendedTimeCard({ scenario = 'recommend', slots = [], descri
           gap: '8px',
         }}
       >
-        {visibleSlots.map((slot, i) => (
-          <RecommendedSlotCard
-            key={slot.dateTime}
-            dateTime={slot.dateTime}
-            caption={slot.caption}
-            tier={tierOf(i)}
-            accent={accent}
-          />
-        ))}
+        {visibleSlots.map((slot) => {
+          const isSelected = keys.has(slot.dateTime);
+          const tier = !isSelected ? 'plain' : slot.dateTime === firstSelectedDateTime ? 'primary' : 'secondary';
+          return (
+            <RecommendedSlotCard
+              key={slot.dateTime}
+              dateTime={slot.dateTime}
+              caption={slot.caption}
+              tier={tier}
+              accent={accent}
+              onClick={() => onToggleSlot?.(slot.dateTime)}
+            />
+          );
+        })}
       </Box>
+
+      {isAtMax && (
+        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'grey.500' }}>
+          후보는 최대 {MAX_SELECTABLE}개까지 선택할 수 있어요
+        </Typography>
+      )}
     </Box>
   );
 }
