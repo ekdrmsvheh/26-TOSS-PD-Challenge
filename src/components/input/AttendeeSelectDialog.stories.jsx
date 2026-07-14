@@ -27,8 +27,8 @@ export default {
         component: `
 ## AttendeeSelectDialog
 
-"참여 인원을 선택해 주세요" 모달. 주최자 카드(고정) + 검색 드롭다운(Autocomplete)으로 동료를 찾아 추가하는 참여자 목록(필수/선택 토글, 삭제)으로 구성된다.
-새로 추가된 참여자는 "필수"로 시작하며, "선택 완료"를 눌러야 변경 사항이 확정된다. 닫기(X)는 변경을 취소한다.
+"참석 인원을 선택해 주세요" 모달. 주최자 카드(고정) + 검색 드롭다운(Autocomplete)으로 동료를 찾아 추가하는 참석자 목록(필수/선택 토글, 삭제)으로 구성된다.
+새로 추가된 참석자는 "필수"로 시작하며, "선택 완료"를 눌러야 변경 사항이 확정된다. 닫기(원형 X)는 변경을 취소한다.
         `,
       },
     },
@@ -43,7 +43,7 @@ export const Default = {
     return (
       <>
         <Button variant="outlined" onClick={() => setOpen(true)}>
-          참여 인원 편집
+          참석 인원 편집
         </Button>
         <AttendeeSelectDialog
           open={open}

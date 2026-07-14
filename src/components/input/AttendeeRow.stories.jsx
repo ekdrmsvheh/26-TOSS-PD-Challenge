@@ -16,6 +16,11 @@ export default {
       options: ['required', 'recommended', 'optional'],
       description: '참석 레벨',
     },
+    variant: {
+      control: 'radio',
+      options: ['bordered', 'plain'],
+      description: "'bordered'(개별 보더 박스) | 'plain'(보더 없이 divider로 나열)",
+    },
     onRoleLevelChange: { action: 'roleLevelChanged', description: '필수/선택 토글 변경 핸들러 (있으면 점 대신 토글 표시)' },
     onRemove: { action: 'removed', description: '삭제 버튼 핸들러' },
   },

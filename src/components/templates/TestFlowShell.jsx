@@ -114,6 +114,8 @@ function NavigationItem({ item, selected, badgeState, onClick }) {
  * Props:
  * @param {string} role - 현재 역할 ('host' | 'participant') [Optional, 기본값: 'host']
  * @param {number} currentStep - 현재 활성 호스트 단계 (1부터 시작) [Optional, 기본값: 1]
+ * @param {number} maxNumber - 진행 가능한 최대 플로우 번호. 이 번호를 초과하는 항목은
+ *   메뉴에는 그대로 보이되 클릭이 비활성화된다 (배포 시 미완성 단계 잠금용) [Optional, 기본값: Infinity]
  * @param {function} onSelectItem - 플로우 항목 클릭 핸들러, { role, step }을 전달 [Optional]
  * @param {string} scenario - 현재 선택된 시나리오 ('A' | 'B') [Optional, 기본값: 'A']
  * @param {function} onScenarioChange - 시나리오 라디오 변경 핸들러 [Optional]
@@ -139,6 +141,7 @@ const TestFlowShell = forwardRef(function TestFlowShell(
   {
     role = 'host',
     currentStep = 1,
+    maxNumber = Infinity,
     onSelectItem,
     scenario = 'A',
     onScenarioChange,
@@ -246,13 +249,15 @@ const TestFlowShell = forwardRef(function TestFlowShell(
                     {group.items.map((item) => {
                       const selected = item.role === role && item.number === currentNumber;
                       const badgeState = selected ? 'selected' : item.number < currentNumber ? 'done' : 'default';
+                      // maxNumber를 넘는 항목은 메뉴에 보이되 클릭 비활성화(미완성 단계 잠금)
+                      const locked = item.number > maxNumber;
                       return (
                         <NavigationItem
                           key={item.id}
-                          item={item}
+                          item={locked ? { ...item, disabled: true } : item}
                           selected={selected}
                           badgeState={badgeState}
-                          onClick={() => onSelectItem?.({ role: item.role, step: item.step })}
+                          onClick={locked ? undefined : () => onSelectItem?.({ role: item.role, step: item.step })}
                         />
                       );
                     })}

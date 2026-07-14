@@ -30,6 +30,7 @@ const ROLE_LEVEL_LABEL = {
  * 2. roleLevel이 있으면 이름 옆에 필수/권장/선택 점 표시
  * 3. onRoleLevelChange가 있으면 점 대신 필수/선택 토글(ToggleButtonGroup)을 표시한다 (recommended는 토글 대상에서 제외)
  * 4. onRemove가 있고 isHost가 false일 때만 삭제 버튼 노출
+ * 5. variant='plain'이면 개별 보더/라운드를 없앤다 — 카드 안에 divider로 구분해 나열할 때 사용
  *
  * Props:
  * @param {string} name - 참석자 이름 [Required]
@@ -40,6 +41,7 @@ const ROLE_LEVEL_LABEL = {
  * @param {string} roleLevel - 참석 레벨 ('required' | 'recommended' | 'optional') [Optional]
  * @param {function} onRoleLevelChange - 필수/선택 토글 변경 핸들러 (level) => void [Optional, 있으면 점 대신 토글 렌더]
  * @param {function} onRemove - 삭제 버튼 핸들러 [Optional]
+ * @param {string} variant - 'bordered'(개별 보더 박스) | 'plain'(보더 없이 나열) [Optional, 기본값: 'bordered']
  * @param {object} sx - 추가 스타일 [Optional]
  *
  * Example usage:
@@ -58,30 +60,32 @@ export function AttendeeRow({
   roleLevel,
   onRoleLevelChange,
   onRemove,
+  variant = 'bordered',
   sx,
 }) {
+  const isPlain = variant === 'plain';
   return (
     <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: '12px',
-        padding: '12px 14px',
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: '12px', // --radius-md
+        gap: '14px',
+        padding: isPlain ? '12px 0' : '12px 14px',
+        ...(isPlain
+          ? {}
+          : { border: '1px solid', borderColor: 'divider', borderRadius: '12px' /* --radius-md */ }),
         ...sx,
       }}
     >
       <Avatar
         src={avatarSrc}
-        sx={{ width: 36, height: 36, flexShrink: 0, ...(avatarColor && { bgcolor: avatarColor }) }}
+        sx={{ width: 44, height: 44, flexShrink: 0, ...(avatarColor && { bgcolor: avatarColor }) }}
       >
         {name?.[0]}
       </Avatar>
 
       <Box sx={{ flex: '1 1 0%', minWidth: 0 }}>
-        <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary', whiteSpace: 'nowrap' }}>
+        <Typography sx={{ fontSize: 16, fontWeight: 600, color: 'text.primary', whiteSpace: 'nowrap' }}>
           {name}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -92,7 +96,7 @@ export function AttendeeRow({
             <Typography
               sx={{
                 fontSize: 13,
-                color: 'text.secondary',
+                color: 'grey.500',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -129,22 +133,24 @@ export function AttendeeRow({
           onChange={(_, value) => value && onRoleLevelChange(value)}
           sx={{
             flexShrink: 0,
-            bgcolor: 'background.stone',
-            borderRadius: '10px',
-            p: '2px',
+            bgcolor: 'grey.100',
+            borderRadius: '8px', // --radius/8
+            gap: '2px',
+            p: '3px',
             '& .MuiToggleButtonGroup-grouped': {
               border: 0,
-              borderRadius: '8px !important',
+              borderRadius: '6px !important', // --radius/6
               px: '12px',
-              py: '4px',
-              fontSize: 12,
+              py: '3px',
+              fontSize: 13,
               fontWeight: 600,
-              color: 'text.secondary',
+              color: 'grey.500',
               textTransform: 'none',
               '&.Mui-selected': {
                 bgcolor: 'background.paper',
-                color: 'text.primary',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                color: 'primary.main', // Blue is interaction — 선택된 값만 브랜드 블루
+                boxShadow: '0px 4px 4px rgba(36, 42, 48, 0.04)', // Flex/Shadow
+                '&:hover': { bgcolor: 'background.paper' },
               },
             },
           }}
@@ -155,8 +161,8 @@ export function AttendeeRow({
       )}
 
       {!isHost && onRemove && (
-        <IconButton size="small" onClick={onRemove} aria-label={`${name} 삭제`}>
-          <CloseIcon sx={{ fontSize: 16 }} />
+        <IconButton size="small" onClick={onRemove} aria-label={`${name} 삭제`} sx={{ color: 'grey.500' }}>
+          <CloseIcon sx={{ fontSize: 18 }} />
         </IconButton>
       )}
     </Box>

@@ -46,15 +46,17 @@ export function ReviewRequestSentView({ attendeeCount = 5, candidateCount = 3, o
           <br />
           참석자들이 각자 가능 여부를 확인하면 응답 현황에서 볼 수 있어요.
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={onViewResponses}
-          sx={{ mt: '4px' }}
-        >
-          응답 현황 보기
-        </Button>
+        {onViewResponses && (
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={onViewResponses}
+            sx={{ mt: '4px' }}
+          >
+            응답 현황 보기
+          </Button>
+        )}
       </Stack>
     </CardPageLayout>
   );

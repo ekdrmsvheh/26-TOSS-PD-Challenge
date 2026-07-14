@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import Dialog from '@mui/material/Dialog';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -16,11 +16,14 @@ import CheckIcon from '@mui/icons-material/Check';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import { AttendeeRow } from './AttendeeRow';
 
+// 카드 안 행 사이 구분선 — Figma "Line/Normal/Neutral"(#70737C 16%). 컴포넌트 보더(divider)보다 옅다
+const ROW_DIVIDER = 'rgba(112, 115, 124, 0.16)';
+
 /**
  * AttendeeSelectDialog 컴포넌트
  *
- * "참여 인원을 선택해 주세요" 모달. 주최자 카드(고정, 삭제 불가)와
- * 참여자 목록(필수/선택 토글 + 삭제)을 보여준다. 참여자는 검색 드롭다운(Autocomplete)에서
+ * "참석 인원을 선택해 주세요" 모달. 주최자 카드(고정, 삭제 불가)와
+ * 참석자 목록(필수/선택 토글 + 삭제)을 보여준다. 참석자는 검색 드롭다운(Autocomplete)에서
  * 동료를 찾아 클릭하면 추가된다.
  *
  * 동작 방식:
@@ -29,17 +32,17 @@ import { AttendeeRow } from './AttendeeRow';
  * 3. 드롭다운 상단에는 선택 인원 수와 "모두 지우기"가 있고, 각 후보는 사진 썸네일 + 이름 + 역할을
  *    한 줄로 보여준다. 클릭하면 draft에 필수(required) 기본값으로 추가되고 체크 표시가 붙는다.
  *    이미 추가된 후보를 다시 클릭하면 draft에서 제거된다 (다중 선택 토글, 드롭다운은 닫히지 않음)
- * 4. 참여자 행의 필수/선택 토글, 삭제(X)는 draft에 즉시 반영된다
- * 5. "선택 완료"를 눌러야 onConfirm(draft)이 호출되고 닫힌다. 닫기(X)는 draft를 버리고 취소한다
+ * 4. 참석자 행의 필수/선택 토글, 삭제(X)는 draft에 즉시 반영된다. 행은 보더 없이 divider로 구분된다
+ * 5. "선택 완료"를 눌러야 onConfirm(draft)이 호출되고 닫힌다. 닫기(원형 X)는 draft를 버리고 취소한다
  * 6. draft가 비면 "함께할 동료를 선택해 주세요" 빈 상태를 보여준다
- * 7. 모달 높이는 선택 인원 수와 무관하게 800px로 고정되고, 참여자 목록만 내부 스크롤된다
+ * 7. 모달 높이는 선택 인원 수와 무관하게 800px로 고정되고, 참석자 목록만 내부 스크롤된다
  *
  * Props:
  * @param {boolean} open - 모달 표시 여부 [Required]
  * @param {function} onClose - 취소/닫기 핸들러 [Required]
  * @param {{name: string, role: string, avatarSrc: string, avatarColor: string}} host - 주최자 정보 [Required]
  * @param {Array<{id: string, name: string, role: string, avatarSrc: string}>} directory - 검색 드롭다운에서 고를 수 있는 동료 후보 목록 [Optional, 기본값: []]
- * @param {Array<{id: string, name: string, role: string, roleLevel: 'required'|'optional', avatarSrc: string, avatarColor: string}>} participants - 현재 참여자 목록 [Required]
+ * @param {Array<{id: string, name: string, role: string, roleLevel: 'required'|'optional', avatarSrc: string, avatarColor: string}>} participants - 현재 참석자 목록 [Required]
  * @param {function} onConfirm - "선택 완료" 클릭 핸들러 (participants) => void [Required]
  * @param {object} sx - 추가 스타일 [Optional]
  *
@@ -92,28 +95,58 @@ export function AttendeeSelectDialog({ open, onClose, host, directory = [], part
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      slotProps={{ paper: { sx: { borderRadius: '20px', height: '800px' } } }}
+      maxWidth={false}
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: '20px',
+            width: '600px',
+            maxWidth: '600px',
+            height: '800px',
+            maxHeight: '90vh',
+            border: '1px solid',
+            borderColor: 'divider',
+            boxShadow: '0px 24px 36px rgba(36, 42, 48, 0.2)', // Flex/Shadow/LG Soft
+          },
+        },
+      }}
     >
-      <Box sx={{ p: '28px', height: '100%', display: 'flex', flexDirection: 'column', ...sx }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: '20px', flexShrink: 0 }}>
-          <Typography variant="h5">참여 인원을 선택해 주세요</Typography>
-          <IconButton size="small" onClick={onClose} aria-label="닫기">
-            <CloseIcon sx={{ fontSize: 18 }} />
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', ...sx }}>
+        {/* 헤더: 원형 닫기 버튼만 (타이틀은 본문 상단으로 내려감) */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: '32px', px: '32px', pb: '8px', flexShrink: 0 }}>
+          <IconButton
+            onClick={onClose}
+            aria-label="닫기"
+            sx={{ bgcolor: 'grey.100', width: 32, height: 32, '&:hover': { bgcolor: 'grey.200' } }}
+          >
+            <CloseIcon sx={{ fontSize: 18, color: 'grey.500' }} />
           </IconButton>
-        </Stack>
-
-        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '14px', mb: '16px', flexShrink: 0 }}>
-          <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: '10px' }}>주최자</Typography>
-          <AttendeeRow name={host.name} role={host.role} avatarSrc={host.avatarSrc} avatarColor={host.avatarColor} sx={{ border: 0, p: 0 }} />
         </Box>
 
-        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '14px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        {/* 본문 */}
+        <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '20px', px: '40px' }}>
+          <Typography sx={{ fontSize: 28, fontWeight: 700, lineHeight: 1.36, letterSpacing: '-0.66px', color: 'text.primary', flexShrink: 0 }}>
+            참석 인원을 선택해 주세요
+          </Typography>
+
+          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* 주최자 카드 */}
+            <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.07)', borderRadius: '12px', boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.03)', pt: '16px', pb: '12px', px: '20px', flexShrink: 0 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.700' }}>주최자</Typography>
+              <AttendeeRow variant="plain" name={host.name} role={host.role} avatarSrc={host.avatarSrc} avatarColor={host.avatarColor} sx={{ py: '8px' }} />
+            </Box>
+
+            {/* 참석자 카드 */}
+            <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.07)', borderRadius: '12px', boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.03)', pt: '20px', pb: '8px', px: '20px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: '10px', flexShrink: 0 }}>
-            <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>참여자</Typography>
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.700' }}>
+              참석자
+              {draft.length > 0 && (
+                <Box component="span" sx={{ color: 'primary.main', ml: '4px' }}>{draft.length}</Box>
+              )}
+            </Typography>
             {draft.length > 0 && (
-              <Button size="small" onClick={handleClearAll} sx={{ color: 'text.secondary', fontSize: 12, textDecoration: 'underline' }}>
+              <Button size="small" onClick={handleClearAll} sx={{ color: 'grey.500', fontSize: 13, textDecoration: 'underline' }}>
                 모두 지우기
               </Button>
             )}
@@ -146,12 +179,12 @@ export function AttendeeSelectDialog({ open, onClose, host, directory = [], part
                   spacing="10px"
                   sx={{ px: '16px', py: '12px' }}
                 >
-                  <Avatar src={option.avatarSrc} sx={{ width: 36, height: 36, fontSize: 13, fontWeight: 600 }}>
+                  <Avatar src={option.avatarSrc} sx={{ width: 26, height: 26, fontSize: 11, fontWeight: 600 }}>
                     {option.name.slice(-2)}
                   </Avatar>
-                  <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{option.name}</Typography>
+                  <Typography sx={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap' }}>{option.name}</Typography>
                   {option.role && (
-                    <Typography sx={{ fontSize: 13, color: 'text.secondary', whiteSpace: 'nowrap' }}>{option.role}</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'grey.400', whiteSpace: 'nowrap' }}>{option.role}</Typography>
                   )}
                   <Box sx={{ flex: 1 }} />
                   {selected && <CheckIcon sx={{ fontSize: 18, color: 'primary.main', flexShrink: 0 }} />}
@@ -166,7 +199,7 @@ export function AttendeeSelectDialog({ open, onClose, host, directory = [], part
                 slotProps={{
                   input: {
                     ...params.InputProps,
-                    startAdornment: <SearchIcon sx={{ fontSize: 16, color: 'text.disabled', ml: '4px' }} />,
+                    startAdornment: <SearchIcon sx={{ fontSize: 20, color: 'text.disabled', ml: '2px', mr: '2px' }} />,
                   },
                 }}
               />
@@ -186,7 +219,7 @@ export function AttendeeSelectDialog({ open, onClose, host, directory = [], part
                 >
                   <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: '16px', py: '14px' }}>
                     <Typography sx={{ fontSize: 13, fontWeight: 600 }}>총 {selectedOptions.length}명 선택 됨</Typography>
-                    <Button size="small" onClick={handleClearAll} sx={{ color: 'text.secondary', fontSize: 12, textDecoration: 'underline' }}>
+                    <Button size="small" onClick={handleClearAll} sx={{ color: 'grey.500', fontSize: 13, textDecoration: 'underline' }}>
                       모두 지우기
                     </Button>
                   </Stack>
@@ -195,35 +228,43 @@ export function AttendeeSelectDialog({ open, onClose, host, directory = [], part
                 </Paper>
               ),
             }}
-            sx={{ mb: '12px', flexShrink: 0, '& .MuiOutlinedInput-root': { fontSize: 13 } }}
+            sx={{ mb: '8px', flexShrink: 0, '& .MuiOutlinedInput-root': { borderRadius: '12px', fontSize: 15 } }}
           />
 
           {draft.length === 0 ? (
             <Stack alignItems="center" justifyContent="center" spacing="10px" sx={{ flex: 1 }}>
-              <GroupOutlinedIcon sx={{ fontSize: 28, color: 'text.disabled' }} />
-              <Typography sx={{ fontSize: 13, color: 'text.disabled' }}>함께할 동료를 선택해 주세요</Typography>
+              <GroupOutlinedIcon sx={{ fontSize: 28, color: 'grey.400' }} />
+              <Typography sx={{ fontSize: 13, color: 'grey.500' }}>함께할 동료를 선택해 주세요</Typography>
             </Stack>
           ) : (
-            <Stack spacing="8px" sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-              {draft.map((person) => (
-                <AttendeeRow
-                  key={person.id}
-                  name={person.name}
-                  role={person.role}
-                  avatarSrc={person.avatarSrc}
-                  avatarColor={person.avatarColor}
-                  roleLevel={person.roleLevel}
-                  onRoleLevelChange={(level) => handleRoleLevelChange(person.id, level)}
-                  onRemove={() => handleRemove(person.id)}
-                />
+            <Stack sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+              {draft.map((person, index) => (
+                <Fragment key={person.id}>
+                  {index > 0 && <Divider sx={{ borderColor: ROW_DIVIDER }} />}
+                  <AttendeeRow
+                    variant="plain"
+                    name={person.name}
+                    role={person.role}
+                    avatarSrc={person.avatarSrc}
+                    avatarColor={person.avatarColor}
+                    roleLevel={person.roleLevel}
+                    onRoleLevelChange={(level) => handleRoleLevelChange(person.id, level)}
+                    onRemove={() => handleRemove(person.id)}
+                  />
+                </Fragment>
               ))}
             </Stack>
           )}
+            </Box>
+          </Box>
         </Box>
 
-        <Button fullWidth variant="contained" size="large" onClick={handleConfirm} sx={{ mt: '20px', flexShrink: 0 }}>
-          선택 완료
-        </Button>
+        {/* 푸터: 리스트가 흰색 페이드 아래로 스크롤되고 그 위에 CTA */}
+        <Box sx={{ flexShrink: 0, px: '40px', pt: '16px', pb: '40px', background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, #fff 40%)' }}>
+          <Button fullWidth variant="contained" size="large" onClick={handleConfirm}>
+            선택 완료
+          </Button>
+        </Box>
       </Box>
     </Dialog>
   );

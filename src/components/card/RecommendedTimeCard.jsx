@@ -13,21 +13,21 @@ const DEFAULT_DESCRIPTION = {
 
 const COLLAPSED_COUNT = 3;
 
-// 슬롯 위치 기반 위계: 1등=primary, 그 다음(마지막 제외)=secondary, 4개 이상일 때 맨 끝 1개만 plain(무채색)
-const tierOf = (index, total) => {
+// 슬롯 위치 기반 위계: 1등=primary, 2~3등(접힘 상태에서 보이는 나머지)=secondary,
+// "모든 후보 보기"로 펼쳤을 때 나오는 4등 이후는 전부 plain(무채색)
+const tierOf = (index) => {
   if (index === 0) return 'primary';
-  if (total > 3 && index === total - 1) return 'plain';
-  return 'secondary';
+  if (index < COLLAPSED_COUNT) return 'secondary';
+  return 'plain';
 };
 
 /**
  * RecommendedTimeCard 컴포넌트
  *
  * "추천 시간" 카드 — 시간 조건에 맞는 후보를 3열 그리드로 보여준다. slots[0]이 대표(1등)
- * 후보로 배경 채움+굵은 accent 보더로 강조되고, 중간 순위는 옅은 accent 보더, 4개 이상일 때
- * 맨 끝 1개는 완전 무채색(참고용 옵션)으로 톤다운된다. "모든 후보 보기" 토글을 켜면 2번째
- * 행까지 펼쳐진다. scenario에 따라 전원 참석 가능(blue)/조정 필요(orange) 톤과 안내 문구가
- * 바뀐다.
+ * 후보로 배경 채움+굵은 accent 보더로 강조되고, 2·3등은 옅은 accent 보더, "모든 후보 보기"로
+ * 펼쳤을 때 나오는 4등 이후는 전부 완전 무채색(참고용 옵션)으로 톤다운된다. scenario에 따라
+ * 전원 참석 가능(blue)/조정 필요(orange) 톤과 안내 문구가 바뀐다.
  *
  * 동작 방식:
  * 1. 기본값은 접힘 상태 — 슬롯 3개까지만 노출
@@ -81,7 +81,7 @@ export function RecommendedTimeCard({ scenario = 'recommend', slots = [], descri
             key={slot.dateTime}
             dateTime={slot.dateTime}
             caption={slot.caption}
-            tier={tierOf(i, visibleSlots.length)}
+            tier={tierOf(i)}
             accent={accent}
           />
         ))}

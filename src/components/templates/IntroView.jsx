@@ -96,15 +96,6 @@ export function IntroView({ onStart, sx }) {
         >
           시작하기
         </Button>
-
-        <Stack spacing="2px" alignItems="flex-start" sx={{ width: '100%' }}>
-          <Typography sx={{ fontSize: '0.9375rem', color: 'text.secondary', opacity: 0.4, lineHeight: 1.6 }}>
-            토스 프로덕트 디자이너 챌린지 2026
-          </Typography>
-          <Typography sx={{ fontSize: '0.9375rem', fontWeight: 700, color: 'text.secondary', lineHeight: 1.6 }}>
-            참가자: 이지혜
-          </Typography>
-        </Stack>
       </Stack>
     </Box>
   );

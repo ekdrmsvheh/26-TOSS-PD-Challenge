@@ -54,7 +54,8 @@ const cellStyle = (state, scenario) => {
  * @param {{label: string, date: number}[]} days - 요일 컬럼 목록 [Required]
  * @param {string[]} hours - 시간 행 목록 [Required]
  * @param {object} cellStates - `${dayIndex}-${hourIndex}` → 셀 상태 맵 [Optional]
- * @param {object} events - `${dayIndex}-${hourIndex}` → [{ person, title, isConflict }] 상세보기용 일정 맵 [Optional]
+ * @param {object} events - `${dayIndex}-${hourIndex}` → [{ person, title, isConflict }] 상세보기용 일정 맵.
+ *   person이 없으면(예: "점심시간") 이름 없이 title만 표시한다 [Optional]
  * @param {object} sx - 추가 스타일 [Optional]
  *
  * Example usage:
@@ -156,7 +157,7 @@ export function CalendarAvailabilityCard({ scenario = 'recommend', days, hours, 
                           }}
                           noWrap
                         >
-                          {ev.person}: {ev.title}
+                          {ev.person ? `${ev.person}: ${ev.title}` : ev.title}
                         </Typography>
                       </Stack>
                     ))}

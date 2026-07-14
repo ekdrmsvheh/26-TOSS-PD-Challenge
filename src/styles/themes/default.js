@@ -489,6 +489,14 @@ const components = {
         lineHeight: 1.5,
         letterSpacing: '0.0912px',
       },
+      containedPrimary: {
+        // Figma Button/Solid disabled — 회색으로 안 바뀌고 동일한 배경/텍스트에 opacity 40%만 적용
+        '&.Mui-disabled': {
+          backgroundColor: primitives.blue[500],
+          color: '#FFFFFF',
+          opacity: 0.4,
+        },
+      },
     },
   },
   MuiOutlinedInput: {
@@ -561,21 +569,23 @@ const components = {
           opacity: 1,
           transition: 'background-color 200ms cubic-bezier(0.4, 0, 0.2, 1)',
         },
+        // Figma 최종본 실측값 — "모든 후보 보기"/"상세 일정 보기" 토글 컨테이너 26x16px
         '&.MuiSwitch-sizeSmall': {
-          width: 40,
-          height: 24,
+          width: 26,
+          height: 16,
           '& .MuiSwitch-switchBase': {
-            padding: 3,
+            padding: 2,
             '&.Mui-checked': {
-              transform: 'translateX(16px)',
+              transform: 'translateX(10px)',
             },
           },
           '& .MuiSwitch-thumb': {
-            width: 18,
-            height: 18,
+            width: 12,
+            height: 12,
+            boxShadow: '0px 1px 2px rgba(25, 31, 40, 0.15)',
           },
           '& .MuiSwitch-track': {
-            borderRadius: 12,
+            borderRadius: 8,
           },
         },
       },

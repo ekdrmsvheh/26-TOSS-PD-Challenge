@@ -40,6 +40,8 @@ import { testImages } from '../../utils/pexels-test-data';
  *
  * Props:
  * @param {boolean} hasConditions - 조건 입력 완료 여부 [Optional, 기본값: false]
+ * @param {'A'|'B'} scenario - A(해피 패스, 전원 참석 가능)/B(조정 상황, 일정 조정 필요) — 추천 시간·캘린더
+ *   카드의 색상(blue/orange)과 데이터가 이 값에 따라 바뀐다 [Optional, 기본값: 'A']
  * @param {function} onShowSchedule - "가능한 시간 찾기" 클릭 핸들러 [Optional]
  * @param {function} onEditAttendees - 참여 인원 편집 다이얼로그를 여는 시점에 함께 호출되는 알림 핸들러 [Optional]
  * @param {function} onNext - "다음" 클릭 핸들러 [Optional]
@@ -112,13 +114,24 @@ const TEST_DATE_RANGE = { start: new Date(2026, 6, 13), end: new Date(2026, 6, 1
 const TEST_SEARCH_START = '오전 9:00';
 const TEST_SEARCH_END = '오후 5:00';
 
-// 추천 시간 카드 슬롯 — slots[0]이 대표(가장 빠른) 슬롯으로 컬러 강조되고, 캘린더의 같은 셀과 연결된다
-const recommendedSlots = [
+// 추천 시간 카드 슬롯 — slots[0]이 대표(가장 빠른) 슬롯으로 컬러 강조되고, 캘린더의 같은 셀과 연결된다.
+// 시나리오 A(해피 패스)/B(조정 상황) 각각 Figma 최종본 데이터를 그대로 반영한다 — B의 2·3번 캡션이
+// 동일한 것("지혜/상륜님...")과 4·5번 캡션이 동일한 것("정희님 일정 조정 시 전원 참여")은 Figma 원본
+// 그대로다(오타로 보이지만 정확한 재현을 위해 그대로 둠)
+const HAPPY_SLOTS = [
   { dateTime: '7/13(월) 오전 10:00', caption: '전원 참석, 가장 빠른 시간' },
-  { dateTime: '7/14(화) 오후 12:00', caption: '전원 참석' },
-  { dateTime: '7/15(수) 오후 5:00', caption: '전원 참석' },
-  { dateTime: '7/16(목) 오전 11:00', caption: '전원 참석' },
-  { dateTime: '7/17(금) 오후 2:00', caption: '전원 참석' },
+  { dateTime: '7/14(화) 오후 12:00', caption: '전원 참석, 두번째로 빠른 시간' },
+  { dateTime: '7/15(수) 오후 5:00', caption: '전원 참석, 세번째로 빠른 시간' },
+  { dateTime: '7/16(목) 오전 11:00', caption: '전원 참석, 네번째로 빠른 시간' },
+  { dateTime: '7/16(목) 오후 2:00', caption: '전원 참석, 다섯번째로 빠른 시간' },
+];
+
+const ADJUST_SLOTS = [
+  { dateTime: '7/14(화) 오전 11:00', caption: '정희님 선택 참여 일정 조정 시, 전원 참석' },
+  { dateTime: '7/13(월) 오후 2:00', caption: '지혜/상륜님 선택 참여 일정 조정 시, 전원 참석' },
+  { dateTime: '7/15(수) 오후 4:00', caption: '지혜/상륜님 선택 참여 일정 조정 시, 전원 참석' },
+  { dateTime: '7/16(목) 오전 11:00', caption: '정희님 일정 조정 시 전원 참여' },
+  { dateTime: '7/16(목) 오후 2:00', caption: '정희님 일정 조정 시 전원 참여' },
 ];
 
 const days = [
@@ -131,25 +144,97 @@ const days = [
 
 const hours = ['오전 9:00', '오전 10:00', '오전 11:00', '오후 12:00', '오후 1:00', '오후 2:00', '오후 3:00', '오후 4:00', '오후 5:00'];
 
-// `${dayIndex}-${hourIndex}` 기준 데모 캘린더 셀 상태 — recommendedSlots와 같은 시간을 가리킨다
-const cellStates = {
-  '0-1': 'highlight-primary', // 13일(월) 오전 10:00 — recommendedSlots[0]
+// `${dayIndex}-${hourIndex}` 기준 데모 캘린더 셀 상태 — 각 시나리오의 추천 시간 슬롯과 연결된다
+const HAPPY_CELL_STATES = {
+  '0-1': 'highlight-primary', // 13일(월) 오전 10:00 — HAPPY_SLOTS[0]
   '1-3': 'highlight', // 14일(화) 오후 12:00
-  '2-8': 'highlight', // 15일(수) 오후 5:00
-  '3-2': 'highlight', // 16일(목) 오전 11:00
-  '4-5': 'highlight', // 17일(금) 오후 2:00
-  '3-4': 'empty', // 16일(목) 오후 1:00 — 아무도 일정 없는 빈 시간
+  '2-7': 'highlight', // 15일(수) 오후 4:00
+  '3-2': 'empty', // 16일(목) 오전 11:00 — 아무도 일정 없는 빈 시간
+  '4-5': 'empty', // 17일(금) 오후 2:00
 };
 
-// 상세보기 ON 시 셀 안에 펼쳐지는 참석자별 일정 (하드코딩 데모 데이터)
-const calendarEvents = {
-  '0-0': [{ person: '이지혜', title: '주간회의' }],
-  '0-3': [{ person: '정희', title: '1:1 미팅' }],
-  '1-0': [{ person: '이상륜', title: '배포 준비' }],
-  '1-4': [{ person: '이지혜', title: '점심시간' }],
-  '2-2': [{ person: '김주연', title: '디자인 QA' }],
-  '3-3': [{ person: '정희', title: '점심시간' }],
-  '4-0': [{ person: '이상륜', title: '고객사 모니터링' }],
+const ADJUST_CELL_STATES = {
+  '1-2': 'highlight-primary', // 14일(화) 오전 11:00 — ADJUST_SLOTS[0]
+  '0-5': 'highlight', // 13일(월) 오후 2:00
+  '2-7': 'highlight', // 15일(수) 오후 4:00
+  '3-0': 'highlight', // 16일(목) 오전 9:00
+  '3-2': 'highlight', // 16일(목) 오전 11:00
+  '4-4': 'highlight', // 17일(금) 오후 1:00
+};
+
+// 상세보기 ON 시 셀 안에 펼쳐지는 참석자별 일정 — Figma 최종본 캘린더 상세보기 프레임을 그대로 옮김
+// (참여 인원 이름은 좌측 카드 참석자와 무관하게 Figma 원본 표기를 그대로 사용한다)
+const HAPPY_EVENTS = {
+  '0-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '1-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '2-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '3-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '4-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '1-1': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }, { person: '상륜', title: '배포 준비' }],
+  '2-1': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '3-1': [{ person: '지혜', title: '주간회고' }, { person: '주연', title: '디자인 QA' }],
+  '4-1': [{ person: '정희', title: '1:1 미팅' }, { person: '주연', title: '디자인 QA' }],
+  '0-2': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '1-2': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '2-2': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '4-2': [{ person: '지혜', title: '주간회고' }],
+  '2-3': [{ person: '지혜', title: '제품팀 정기회의' }, { person: '정희', title: '제품팀 정기회의' }, { person: '지은', title: '제품팀 정기회의' }],
+  '0-4': [{ title: '점심시간' }],
+  '1-4': [{ person: '지혜', title: '주간회고' }],
+  '2-4': [{ title: '점심시간' }],
+  '3-4': [{ title: '점심시간' }],
+  '4-4': [{ title: '점심시간' }],
+  '0-5': [{ person: '창철', title: '개발팀 회고' }, { person: '상륜', title: '개발팀 회고' }],
+  '0-6': [{ person: '주연', title: '디자인 QA' }],
+  '2-6': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '0-7': [{ person: '상륜', title: '배포 준비' }, { person: '주연', title: '디자인 QA' }],
+  '1-7': [{ person: '상륜', title: '배포 준비' }, { person: '주연', title: '디자인 QA' }],
+  '2-7': [{ person: '지혜', title: '주간회고' }],
+  '3-7': [{ person: '상륜', title: '배포 준비' }, { person: '주연', title: '디자인 QA' }],
+  '4-7': [{ person: '상륜', title: '배포 준비' }, { person: '주연', title: '디자인 QA' }],
+  '0-8': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '1-8': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '3-8': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '4-8': [{ person: '주연', title: '디자인 QA' }],
+};
+
+// 조정 상황 시나리오 — isConflict:true인 항목이 조정이 필요한 원인 일정(속이 빈 마커 + 강조색)이다
+const ADJUST_EVENTS = {
+  '0-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '1-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '2-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '3-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '4-0': [{ person: '지혜', title: '고객사 모니터링' }],
+  '0-1': [{ person: '주연', title: '디자인 QA' }],
+  '1-1': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '2-1': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '3-1': [{ person: '지혜', title: '주간회고' }, { person: '주연', title: '디자인 QA' }],
+  '4-1': [{ person: '정희', title: '1:1 미팅' }, { person: '주연', title: '디자인 QA' }],
+  '0-2': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '1-2': [{ person: '정희', title: '디자인 QA', isConflict: true }],
+  '2-2': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '3-2': [{ person: '정희', title: '디자인 QA', isConflict: true }],
+  '4-2': [{ person: '지혜', title: '주간회고' }],
+  '2-3': [{ person: '지혜', title: '제품팀 정기회의' }, { person: '정희', title: '제품팀 정기회의' }, { person: '지은', title: '제품팀 정기회의' }],
+  '0-4': [{ title: '점심시간' }],
+  '1-4': [{ person: '지혜', title: '주간회고' }],
+  '2-4': [{ title: '점심시간' }],
+  '3-4': [{ title: '점심시간' }],
+  '4-4': [{ title: '점심시간' }],
+  '0-5': [{ person: '지혜', title: '디자인 QA', isConflict: true }, { person: '상륜', title: '개발 주간 회의', isConflict: true }],
+  '2-5': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '4-5': [{ person: '지혜', title: '1:1 미팅', isConflict: true }, { person: '정희', title: '1:1 미팅', isConflict: true }],
+  '0-6': [{ person: '주연', title: '개발 주간 회의' }],
+  '2-6': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '0-7': [{ person: '상륜', title: '배포 준비' }, { person: '주연', title: '디자인 QA' }],
+  '1-7': [{ person: '상륜', title: '배포 준비' }, { person: '주연', title: '디자인 QA' }],
+  '2-7': [{ person: '지혜', title: '주간회고', isConflict: true }],
+  '3-7': [{ person: '상륜', title: '배포 준비' }, { person: '주연', title: '디자인 QA' }],
+  '4-7': [{ person: '상륜', title: '배포 준비' }, { person: '주연', title: '디자인 QA' }],
+  '0-8': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '1-8': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '3-8': [{ person: '지혜', title: '주간회고' }, { person: '정희', title: '1:1 미팅' }],
+  '4-8': [{ person: '주연', title: '디자인 QA' }],
 };
 
 // 미팅 길이 — 조회 시간과 동일한 TimeSelectPopover(검색 입력 + 스크롤 리스트)를 재사용한다
@@ -212,7 +297,13 @@ const SEARCH_TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   return `${period} ${hour12}:${minute === 0 ? '00' : minute}`;
 });
 
-export function AvailableScheduleView({ hasConditions = false, onShowSchedule, onEditAttendees, onNext, sx }) {
+export function AvailableScheduleView({ hasConditions = false, scenario = 'A', onShowSchedule, onEditAttendees, onNext, sx }) {
+  const isAdjust = scenario === 'B';
+  const cardScenario = isAdjust ? 'adjust' : 'recommend';
+  const slots = isAdjust ? ADJUST_SLOTS : HAPPY_SLOTS;
+  const cellStates = isAdjust ? ADJUST_CELL_STATES : HAPPY_CELL_STATES;
+  const calendarEvents = isAdjust ? ADJUST_EVENTS : HAPPY_EVENTS;
+
   const [participants, setParticipants] = useState([]);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -485,14 +576,14 @@ export function AvailableScheduleView({ hasConditions = false, onShowSchedule, o
         </>
       )}
 
-      {hasConditions && <RecommendedTimeCard scenario="recommend" slots={recommendedSlots} />}
+      {hasConditions && <RecommendedTimeCard scenario={cardScenario} slots={slots} />}
     </CardContainer>
   );
 
   const calendarCard = hasConditions ? (
     <CardContainer key="calendar" variant="elevation" padding="card" radius="card">
       <CalendarAvailabilityCard
-        scenario="recommend"
+        scenario={cardScenario}
         days={days}
         hours={hours}
         cellStates={cellStates}

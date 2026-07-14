@@ -5,24 +5,22 @@ import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
+import { alpha } from '@mui/material/styles';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import CheckIcon from '@mui/icons-material/Check';
 import { CardContainer } from '../card/CardContainer';
-import { SelectTrigger } from '../input/SelectTrigger';
 import { CardPageLayout } from '../layout/CardPageLayout';
 import { primitives } from '../../styles/themes';
 
 /**
  * MeetingInfoView 템플릿
  *
- * "미팅 정보 작성" 화면 — 미팅 시간 찾기 다음 단계로, 확정 전 추천 시간 후보를 고르고
+ * "미팅 정보 작성" 화면 — 미팅 시간 찾기 다음 단계로, 확정 전 추천 시간 후보를 참고하며
  * 미팅 주제/목적/참석 요청 이유/응답 기한을 작성해 참석자에게 보낼 검토 요청을 준비한다.
+ * Figma 최종 시안(node-id 212-23075, 프레임 333:36948) 실측값 기준으로 구현했다.
  *
  * 동작 방식:
- * 1. 좌측 "미팅 조건" 카드는 미팅 시간 찾기 단계의 참여 인원을 그대로 보여주고,
- *    추천 시간 후보 중 하나를 선택해 검토 요청에 담을 시간을 고른다 (기본: 첫 번째 후보)
+ * 1. 좌측 "미팅 조건" 카드는 미팅 시간 찾기 단계의 참여 인원과 추천 시간 상위 3개를
+ *    정적 리스트로 보여준다 (읽기 전용 요약 — 이 단계에서 재선택하지 않는다)
  * 2. 우측 "미팅 목적" 카드의 "AI 자동 생성"을 누르면 미팅 주제를 바탕으로 미팅 목적과
  *    참석자별 참석 요청 이유를 데모 문구로 한 번에 채운다 (실제 생성 없는 프로토타입 데모)
  * 3. 미팅 목적이 비어 있으면 "일정 검토 요청 보내기" 버튼이 비활성 상태로 표시된다
@@ -55,8 +53,8 @@ const shortName = (fullName) => fullName.slice(-2);
 
 const timeCandidates = [
   { label: '전원 참여, 가장 빠른 시간', date: '7/13(월)', time: '오전 10:00' },
-  { label: '전원 참석', date: '7/14(화)', time: '오후 12:00' },
-  { label: '전원 참석', date: '7/15(수)', time: '오후 5:00' },
+  { label: '전원 참석, 두번째로 빠른 시간', date: '7/14(화)', time: '오후 12:00' },
+  { label: '전원 참석, 세번째로 빠른 시간', date: '7/15(수)', time: '오후 5:00' },
 ];
 
 // "AI 자동 생성" 클릭 시 채워지는 데모 문구
@@ -69,28 +67,56 @@ const AI_GENERATED_REASONS = {
   김주연: '결정 이후 측정할 지표와 로그 기준을 함께 정리하려고 해요',
 };
 
+// AI 자동 생성 버튼의 그라데이션 톤 — Figma 라디얼 하이라이트(rgba(90,192,255,1)→rgba(0,128,255,0))를
+// 선형 그라데이션으로 근사
+const AI_GRADIENT = 'linear-gradient(135deg, #5AC0FF 0%, #4974E2 60%)';
+
+// Figma "Text Field" 컴포넌트 실측값 — radius 12px, input dropshadow, 15px Regular 값/플레이스홀더
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
-    fontSize: 14,
-    fontWeight: 600,
+    borderRadius: '12px',
+    fontSize: 15,
+    fontWeight: 400,
+    lineHeight: 1.6,
+    letterSpacing: '0.144px',
     bgcolor: 'background.paper',
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.03)',
     '& fieldset': { borderColor: 'divider' },
     '&:hover fieldset': { borderColor: 'text.secondary' },
   },
+  '& .MuiOutlinedInput-input': {
+    padding: '8px 16px',
+  },
   '& .MuiOutlinedInput-input::placeholder, & .MuiOutlinedInput-input.Mui-disabled::placeholder': {
-    color: 'text.disabled',
+    color: 'grey.400',
     opacity: 1,
   },
 };
 
+const fieldLabelSx = { fontSize: 14, fontWeight: 600, color: 'grey.500', mb: '8px' };
+
+// Figma "Content Badge" 스펙 — 8% 투명도 틴트 배경 + 동일 색 11px SemiBold 텍스트
+const badgeSx = (isRequired) => {
+  const tone = isRequired ? primitives.blue[600] : primitives.grey[700];
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    height: '20px',
+    px: '6px',
+    borderRadius: '6px',
+    fontSize: 11,
+    fontWeight: 700,
+    color: tone,
+    bgcolor: alpha(tone, 0.08),
+    flexShrink: 0,
+  };
+};
+
 export function MeetingInfoView({ onSubmit, sx }) {
-  const [selectedTimeIndex, setSelectedTimeIndex] = useState(0);
   const [topic, setTopic] = useState('AI 운영 에이전트 방향 결정');
   const [referenceUrl, setReferenceUrl] = useState('');
   const [purpose, setPurpose] = useState('');
   const [reasons, setReasons] = useState({});
-  const [deadline] = useState('7월 10일 (금) 오후 1시');
-  const [autoReminder] = useState('요청 후 1시간 뒤');
 
   const attendeeReasonRows = [
     ...REQUIRED_ATTENDEES.map((person) => ({ ...person, level: 'required' })),
@@ -109,179 +135,212 @@ export function MeetingInfoView({ onSubmit, sx }) {
   const canSubmit = purpose.trim().length > 0;
 
   const leftCard = (
-    <CardContainer variant="elevation" padding="card" radius="card" sx={{ width: { xs: '100%', md: '400px' }, minWidth: 0 }}>
-          <Typography variant="h5" sx={{ mb: '20px' }}>미팅 조건</Typography>
+    <CardContainer variant="elevation" padding="card" radius="card" sx={{ width: { xs: '100%', md: '340px' }, minWidth: 0 }}>
+      <Typography variant="h5" sx={{ mb: '20px' }}>미팅 조건</Typography>
 
-          <Typography sx={{ fontSize: 14, fontWeight: 600, mb: '14px' }}>참여 인원</Typography>
-          <Stack direction="row" spacing="6px" flexWrap="wrap" sx={{ mb: '20px' }}>
-            <Avatar sx={{ width: 32, height: 32, fontSize: 11, fontWeight: 600, bgcolor: HOST.tone }}>
-              {shortName(HOST.name)}
-            </Avatar>
-            {REQUIRED_ATTENDEES.map((person) => (
-              <Avatar key={person.name} sx={{ width: 32, height: 32, fontSize: 11, fontWeight: 600, bgcolor: person.tone }}>
-                {shortName(person.name)}
-              </Avatar>
-            ))}
-            {OPTIONAL_ATTENDEES.map((person) => (
-              <Avatar key={person.name} sx={{ width: 32, height: 32, fontSize: 11, fontWeight: 600, bgcolor: person.tone }}>
-                {shortName(person.name)}
-              </Avatar>
-            ))}
-          </Stack>
+      <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.500', mb: '12px' }}>참석 인원</Typography>
+      <Stack direction="row" alignItems="center" sx={{ mb: '20px' }}>
+        <Avatar
+          sx={{
+            width: 36,
+            height: 36,
+            zIndex: 1,
+            fontSize: 12,
+            fontWeight: 600,
+            border: '2px solid',
+            borderColor: 'background.paper',
+            bgcolor: HOST.tone,
+          }}
+        >
+          {shortName(HOST.name)}
+        </Avatar>
+        {REQUIRED_ATTENDEES.map((person) => (
+          <Avatar
+            key={person.name}
+            sx={{
+              width: 36,
+              height: 36,
+              ml: '-4px',
+              zIndex: 1,
+              fontSize: 12,
+              fontWeight: 600,
+              border: '2px solid',
+              borderColor: 'background.paper',
+              bgcolor: person.tone,
+            }}
+          >
+            {shortName(person.name)}
+          </Avatar>
+        ))}
+        {OPTIONAL_ATTENDEES.map((person) => (
+          <Avatar
+            key={person.name}
+            sx={{
+              width: 36,
+              height: 36,
+              ml: '-4px',
+              zIndex: 1,
+              fontSize: 12,
+              fontWeight: 600,
+              border: '2px solid',
+              borderColor: 'background.paper',
+              bgcolor: person.tone,
+            }}
+          >
+            {shortName(person.name)}
+          </Avatar>
+        ))}
+      </Stack>
 
-          <Box sx={{ borderTop: '1px solid', borderColor: primitives.line.neutral, pt: '20px' }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, mb: '14px' }}>추천 시간</Typography>
-            <Stack spacing="10px">
-              {timeCandidates.map((candidate, index) => {
-                const isSelected = index === selectedTimeIndex;
-                return (
-                  <CardContainer
-                    key={candidate.date + candidate.time}
-                    variant="outlined"
-                    padding="md"
-                    isSelected={isSelected}
-                    isInteractive
-                    onClick={() => setSelectedTimeIndex(index)}
-                    sx={{ borderRadius: '12px', position: 'relative', cursor: 'pointer' }}
-                  >
-                    <Typography sx={{ fontSize: 12, color: isSelected ? 'primary.main' : 'text.secondary', mb: '4px' }}>
-                      {candidate.label}
-                    </Typography>
-                    <Typography sx={{ fontSize: 15, fontWeight: 700 }}>
-                      {candidate.date} {candidate.time}
-                    </Typography>
-                    {isSelected && (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: '14px',
-                          right: '14px',
-                          width: 20,
-                          height: 20,
-                          borderRadius: '50%',
-                          bgcolor: 'primary.main',
-                          color: '#FFFFFF',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <CheckIcon sx={{ fontSize: 13 }} />
-                      </Box>
-                    )}
-                  </CardContainer>
-                );
-              })}
-            </Stack>
-            <Stack alignItems="center" sx={{ mt: '8px' }}>
-              <IconButton size="small" aria-label="추천 시간 더 보기">
-                <KeyboardArrowDownIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-              </IconButton>
-            </Stack>
-          </Box>
-  </CardContainer>
+      <Box sx={{ borderTop: '1px solid', borderColor: primitives.line.neutral, pt: '20px' }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.500', mb: '12px' }}>추천 시간</Typography>
+        <Stack spacing="8px">
+          {timeCandidates.map((candidate) => (
+            <CardContainer
+              key={candidate.date + candidate.time}
+              variant="outlined"
+              padding="none"
+              sx={{ borderRadius: '12px', px: '18px', py: '14px' }}
+            >
+              <Typography sx={{ fontSize: 17, fontWeight: 600 }}>
+                {candidate.date} {candidate.time}
+              </Typography>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'grey.500', mt: '2px' }}>
+                {candidate.label}
+              </Typography>
+            </CardContainer>
+          ))}
+        </Stack>
+      </Box>
+    </CardContainer>
   );
 
   const basicInfoCard = (
     <CardContainer key="basic-info" variant="elevation" padding="card" radius="card">
       <Typography variant="h5" sx={{ mb: '20px' }}>기본 정보</Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: '20px' }}>
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary', mb: '7px' }}>
-                  미팅 주제
-                  <Box component="span" sx={{ color: 'error.main' }}> *</Box>
-                </Typography>
-                <TextField
-                  fullWidth
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="미팅 주제를 입력해 주세요"
-                  sx={fieldSx}
-                />
-              </Box>
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary', mb: '7px' }}>
-                  관련 자료
-                </Typography>
-                <TextField
-                  fullWidth
-                  value={referenceUrl}
-                  onChange={(e) => setReferenceUrl(e.target.value)}
-                  placeholder="URL을 입력해 주세요"
-                  sx={fieldSx}
-                />
-              </Box>
-            </Box>
-  </CardContainer>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: '12px' }}>
+        <Box>
+          <Typography sx={fieldLabelSx}>
+            미팅 주제
+            <Box component="span" sx={{ color: 'error.main' }}> *</Box>
+          </Typography>
+          <TextField
+            fullWidth
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="미팅 주제를 입력해 주세요"
+            sx={fieldSx}
+          />
+        </Box>
+        <Box>
+          <Typography sx={fieldLabelSx}>관련 자료</Typography>
+          <TextField
+            fullWidth
+            value={referenceUrl}
+            onChange={(e) => setReferenceUrl(e.target.value)}
+            placeholder="URL을 입력해 주세요"
+            sx={fieldSx}
+          />
+        </Box>
+      </Box>
+    </CardContainer>
   );
 
   const purposeCard = (
     <CardContainer key="purpose" variant="elevation" padding="card" radius="card">
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: '20px' }}>
-              <Typography variant="h5">미팅 목적</Typography>
-              <Button
-                size="small"
-                startIcon={<AutoAwesomeIcon sx={{ fontSize: 15 }} />}
-                onClick={handleGeneratePurpose}
-                sx={{ fontSize: 13, fontWeight: 700, color: 'primary.main' }}
-              >
-                AI 자동 생성
-              </Button>
-            </Stack>
+      {/* AI 자동 생성 아이콘의 그라데이션 채우기용 정의 — 문서 내 어디서든 fill: url(#ai-gradient-fill)로 참조 가능 */}
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+        <defs>
+          <linearGradient id="ai-gradient-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#5AC0FF" />
+            <stop offset="60%" stopColor="#4974E2" />
+          </linearGradient>
+        </defs>
+      </svg>
 
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary', mb: '7px' }}>미팅 목적</Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: '20px' }}>
+        <Typography variant="h5">미팅 목적</Typography>
+        <Button
+          size="small"
+          onClick={handleGeneratePurpose}
+          startIcon={<AutoAwesomeIcon sx={{ fontSize: 15, fill: 'url(#ai-gradient-fill)' }} />}
+          sx={{
+            fontSize: 14,
+            fontWeight: 600,
+            letterSpacing: '0.203px',
+            background: AI_GRADIENT,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
+          AI 자동 생성
+        </Button>
+      </Stack>
+
+      <Typography sx={fieldLabelSx}>미팅 목적</Typography>
+      <TextField
+        fullWidth
+        multiline
+        minRows={2}
+        value={purpose}
+        onChange={(e) => setPurpose(e.target.value)}
+        placeholder="회의에서 결정해야 할 내용을 입력해 주세요"
+        sx={{ ...fieldSx, mb: '20px' }}
+      />
+
+      <Stack direction="row" alignItems="center" spacing="12px" sx={{ mb: '8px' }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.700', flexShrink: 0 }}>
+          참석 요청 이유
+        </Typography>
+        <Box sx={{ flex: 1, height: '1px', bgcolor: primitives.line.neutral }} />
+      </Stack>
+      <Stack spacing="10px">
+        {attendeeReasonRows.map((person) => (
+          <Stack key={person.name} direction="row" alignItems="center" spacing="16px">
+            <Stack direction="row" alignItems="center" spacing="6px" sx={{ flexShrink: 0, minWidth: '86px' }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'grey.500', whiteSpace: 'nowrap' }}>
+                {person.name}
+              </Typography>
+              <Box component="span" sx={badgeSx(person.level === 'required')}>
+                {person.level === 'required' ? '필수참석' : '선택참석'}
+              </Box>
+            </Stack>
             <TextField
               fullWidth
-              multiline
-              minRows={2}
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="회의에서 결정해야 할 내용을 입력해 주세요"
-              sx={{ ...fieldSx, mb: '20px' }}
+              value={reasons[person.name] ?? ''}
+              onChange={(e) => handleReasonChange(person.name, e.target.value)}
+              placeholder="미팅 참석 필요성을 이해할 수 있게 적어 주세요"
+              sx={fieldSx}
             />
-
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary', mb: '10px' }}>참석 요청 이유</Typography>
-            <Stack spacing="10px">
-              {attendeeReasonRows.map((person) => (
-                <Stack key={person.name} direction="row" alignItems="center" spacing="12px">
-                  <Typography sx={{ fontSize: 14, fontWeight: 600, width: '52px', flexShrink: 0 }}>
-                    {person.name}
-                  </Typography>
-                  <Box
-                    component="span"
-                    sx={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: 'text.secondary',
-                      bgcolor: 'background.stone',
-                      px: '10px',
-                      py: '4px',
-                      borderRadius: '8px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {person.level === 'required' ? '필수' : '선택'}
-                  </Box>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={reasons[person.name] ?? ''}
-                    onChange={(e) => handleReasonChange(person.name, e.target.value)}
-                    placeholder="미팅 참석 필요성을 이해할 수 있게 적어 주세요"
-                    sx={fieldSx}
-                  />
-                </Stack>
-              ))}
-            </Stack>
-  </CardContainer>
+          </Stack>
+        ))}
+      </Stack>
+    </CardContainer>
   );
 
   const responseRequestCard = (
     <CardContainer key="response-request" variant="elevation" padding="card" radius="card">
       <Typography variant="h5" sx={{ mb: '20px' }}>응답 요청</Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: '20px' }}>
-        <SelectTrigger label="응답 기한" value={deadline} onClick={() => {}} />
-        <SelectTrigger label="미응답 자동 리마인드" value={autoReminder} onClick={() => {}} />
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: '12px' }}>
+        <Box>
+          <Typography sx={fieldLabelSx}>응답 기한</Typography>
+          <TextField
+            fullWidth
+            value="7월 10일 (금) 오후 1시"
+            slotProps={{ htmlInput: { readOnly: true } }}
+            sx={fieldSx}
+          />
+        </Box>
+        <Box>
+          <Typography sx={fieldLabelSx}>미응답 자동 리마인드</Typography>
+          <TextField
+            fullWidth
+            value="요청 후 1시간 뒤"
+            slotProps={{ htmlInput: { readOnly: true } }}
+            sx={fieldSx}
+          />
+        </Box>
       </Box>
     </CardContainer>
   );
