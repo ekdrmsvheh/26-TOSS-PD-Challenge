@@ -58,7 +58,7 @@ sx={{ p: 2, m: 3, gap: 1 }}
 
 - 좌측 네비게이션(`TestFlowShell` aside): 너비 300px 고정
 - 우측 콘텐츠 영역의 흰 박스는 `CardContainer`, 즉 "카드"다 (별도 "패널" 개념을 두지 않는다)
-- 카드 영역(`CardPageLayout`): max-width 1280px, 좌우 패딩 40px, 상단 패딩 80px
+- 카드 영역(`CardPageLayout`): max-width 1280px, 좌우 패딩 40px, 상단 패딩 40px
 - 카드는 좌우로 나뉜다 — 좌측 1개(조건 설정용) + 우측 여러 개(콘텐츠 유형별 스택). 우측은 좌측에서 설정한 값을 참조해 보여주는 UX를 따른다
 - 타이틀-카드 갭 20px, 좌/우 카드 갭 20px, 우측 세로 스택 카드 간 갭 12px
 - 좌우 분할이 맞지 않는 단일 컬럼 화면(예: 참석자 응답)은 `CardPageLayout`을 `left` 없이 사용해 바깥 컨테이너 규격(max-width/패딩)만 통일 적용한다

@@ -5,9 +5,9 @@ import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
+import SvgIcon from '@mui/material/SvgIcon';
 import AddIcon from '@mui/icons-material/Add';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import { CardContainer } from '../card/CardContainer';
 import { RecommendedTimeCard } from '../card/RecommendedTimeCard';
 import { CalendarAvailabilityCard } from '../card/CalendarAvailabilityCard';
@@ -50,6 +50,16 @@ import { testImages } from '../../utils/pexels-test-data';
  * Example usage:
  * <AvailableScheduleView hasConditions={hasConditions} onShowSchedule={() => setHasConditions(true)} />
  */
+
+// Figma "Icon/Normal/Calendar" 원본 path — 추천 시간 카드 빈 상태(조건 설정 전) 전용 아이콘.
+// fill은 원본 지정색(#B0B8C1)과 동일한 theme 토큰(grey.400)을 sx color로 넘겨 사용한다.
+function EmptyScheduleCalendarIcon(props) {
+  return (
+    <SvgIcon viewBox="0 0 40 40" {...props}>
+      <path d="M35 29.5C35 32.5376 32.5376 35 29.5 35H10.5C7.46243 35 5 32.5376 5 29.5V17.5H35V29.5ZM30 5.02539C32.8031 5.27813 35 7.63107 35 10.5V14.5H5V10.5C5 7.63107 7.19688 5.27813 10 5.02539V5H12V2.5C12 1.67157 12.6716 1 13.5 1C14.3284 1 15 1.67157 15 2.5V5H25V2.5C25 1.67157 25.6716 1 26.5 1C27.3284 1 28 1.67157 28 2.5V5H30V5.02539Z" />
+    </SvgIcon>
+  );
+}
 
 // 참여 인원 선택 모달(AttendeeSelectDialog)에서는 이니셜 대신 인물 사진 썸네일을 쓴다 — 프로젝트에 이미 있는
 // Pexels 테스트 데이터(portrait 카테고리)를 데모용 프로필 사진으로 재사용 (utils/pexels-test-data.js)
@@ -565,12 +575,21 @@ export function AvailableScheduleView({ hasConditions = false, scenario = 'A', o
       {!hasConditions && (
         <>
           <Typography variant="h5" sx={{ mb: 0 }}>추천 시간</Typography>
-          <Stack alignItems="center" justifyContent="center" spacing="12px" sx={{ flex: 1 }}>
-            <CalendarTodayOutlinedIcon sx={{ fontSize: 32, color: 'text.disabled' }} />
-            <Typography sx={{ fontSize: 13, color: 'text.disabled', textAlign: 'center', lineHeight: 1.6 }}>
-              참여 인원과 시간 조건을 설정하면
+          <Stack alignItems="center" justifyContent="center" spacing="20px" sx={{ flex: 1 }}>
+            <EmptyScheduleCalendarIcon sx={{ fontSize: 40, color: 'grey.400' }} />
+            <Typography
+              sx={{
+                fontSize: 15,
+                fontWeight: 500,
+                color: 'grey.500',
+                textAlign: 'center',
+                lineHeight: 1.467,
+                letterSpacing: '0.144px',
+              }}
+            >
+              참석 인원과 시간 조건을 설정하면
               <br />
-              가능한 시간이 표시돼요
+              가능한 시간을 추천해 드려요
             </Typography>
           </Stack>
         </>

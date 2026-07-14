@@ -22,7 +22,7 @@ export default {
         component: `
 ## CardPageLayout
 
-카드(흰 박스, \`CardContainer\`) 기반 화면의 공통 콘텐츠 셸. max-width 1280px, 좌우 40px·상단 80px 패딩을 가지며
+카드(흰 박스, \`CardContainer\`) 기반 화면의 공통 콘텐츠 셸. max-width 1280px, 좌우 40px·상단 40px 패딩을 가지며
 title이 있으면 타이틀-카드 간격 20px을 둔다. left가 있으면 좌(1개 카드)+우(카드 스택) 2컬럼
 분할 모드(컬럼 간 갭 20px, 우측 스택 갭 12px)로 전환되고, 없으면 children을 단일 컬럼으로 렌더링한다.
 
@@ -162,7 +162,7 @@ export const Documentation = {
             </TableRow>
             <TableRow>
               <TableCell>상단 패딩</TableCell>
-              <TableCell sx={{ fontFamily: 'monospace' }}>80px</TableCell>
+              <TableCell sx={{ fontFamily: 'monospace' }}>40px</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>타이틀-카드 갭</TableCell>

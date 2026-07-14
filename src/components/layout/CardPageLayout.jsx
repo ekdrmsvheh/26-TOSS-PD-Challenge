@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
  * 미팅 정보 작성 등)에서 반복되는 바깥 컨테이너 규격과 카드 간격을 하나로 통일한다.
  *
  * 동작 방식:
- * 1. 콘텐츠 영역은 max-width 1280px로 제한되고 좌우 40px·상단 80px 패딩을 갖는다
+ * 1. 콘텐츠 영역은 max-width 1280px로 제한되고 좌우 40px·상단 40px 패딩을 갖는다
  * 2. title이 있으면 타이틀과 카드 사이 20px 간격을 둔다
  * 3. left가 있으면 좌(1개 카드)+우(카드 스택) 2컬럼 분할 모드로 전환된다 — 컬럼 간 갭 20px,
  *    우측 스택 내부 카드 간 갭 12px. 우측은 왼쪽에서 설정한 값을 참조해 보여주는 용도다
@@ -41,7 +41,8 @@ export function CardPageLayout({ title, left, right, children, sx, ...props }) {
         display: 'flex',
         justifyContent: 'center',
         px: '40px',
-        py: '80px',
+        pt: '40px',
+        pb: '80px',
         ...sx,
       }}
       {...props}
